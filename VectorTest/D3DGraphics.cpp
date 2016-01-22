@@ -134,8 +134,31 @@ void D3DGraphics::DrawSurfaceAlpha(int X, int Y, int Width, int Height, const D3
 			PDQWORD mSurface = (PDQWORD)&Surface[surfaceIndex];
 			PDQWORD mBackbuffer = (PDQWORD)&pSysBuffer[backBufferIndex];
 
-			DQWORD sA = ReplicateAlpha(mSurface[surfaceIndex]);
-			_mm_storeu_si128(mBackbuffer, *mSurface);
+			DQWORD srcLo = SSE(mSurface[surfaceIndex]).UnpackLoBytes().A;
+			DQWORD srcHi = SSE(mSurface[surfaceIndex]).UnpackHiBytes().A;
+
+			DQWORD sAHi = ReplicateAlpha(srcHi);
+			sAHi = ShuffleLo_Word(sAHi, AAAA);
+			DQWORD sALo = ReplicateAlpha(srcLo);
+			sALo = ShuffleLo_Word(sALo, AAAA);
+
+			DQWORD dAHi = SSE(_mm_set1_epi16(255)).SubtractWords(sAHi).A;
+			DQWORD dALo = SSE(_mm_set1_epi16(255)).SubtractWords(sALo).A;
+
+			DQWORD rsHi = SSE(sAHi).MultiplyLoWords(srcHi).A;
+			DQWORD rsLo = SSE(sALo).MultiplyLoWords(srcLo).A;
+
+			DQWORD rdHi = SSE(dAHi).MultiplyLoWords(mBackbuffer[backBufferIndex]).A;
+			DQWORD rdLo = SSE(dALo).MultiplyLoWords(mBackbuffer[backBufferIndex]).A;
+
+			DQWORD rHi = SSE(rsHi).AddWords(rdHi).A;
+			DQWORD rLo = SSE(rsLo).AddWords(rdLo).A;
+
+			rHi = SSE(rHi).ShiftRightIWords(8).A;
+			rLo = SSE(rLo).ShiftRightIWords(8).A;
+
+			DQWORD r = SSE(rHi).PackUnsignedSaturateWords(rLo).A;
+			_mm_storeu_si128(mBackbuffer, r);
 		}
 	}
 }

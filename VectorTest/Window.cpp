@@ -31,32 +31,67 @@ Window::Window()
 Window::Window(HINSTANCE Instance, int CmdShow, UINT Width, UINT Height)
 {
 	clName = L"Chili DirectX Framework Window";
+	winTitle = L"VectorTest";
 	width = Width;
 	height = Height;
+	winStyle = WS_POPUP;
+	exWinStyle = 0;
+	hInst = Instance;
 
-	WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, MsgProc, 0, 0,
-		Instance, NULL, NULL, NULL, NULL,
-		clName, NULL };
+	WNDCLASSEX wc{};
+	wc.cbSize = sizeof(WNDCLASSEX);
+	wc.lpfnWndProc = MsgProc;
+	wc.hInstance = hInst;
+	wc.lpszClassName = clName.data();
 
-	RegisterClassEx(&wc);
+	Register(wc);
 
 	RECT wr;
 	wr.left = 0;
 	wr.right = width + wr.left;
 	wr.top = 0;
 	wr.bottom = height + wr.top;
-	AdjustWindowRect(&wr, WS_POPUP, FALSE);
 
-	hWnd = CreateWindowW(clName, L"Vector Test",
-		WS_POPUP, wr.left, wr.top, width, height,
-		NULL, NULL, wc.hInstance, NULL);
-
-	ShowWindow(hWnd, CmdShow);
+	Create(wr);	
+	Show();
 }
 
 Window::~Window()
 {
-	UnregisterClass(clName, hInst);
+	Unregister();
+}
+
+HRESULT Window::Create(const RECT &WinDim)
+{
+	hWnd = CreateWindowEx(exWinStyle, clName.data(), winTitle.data(),
+		winStyle, WinDim.left, WinDim.top, width, height, nullptr,
+		nullptr, hInst, nullptr);
+
+	return hWnd != nullptr ? S_OK : E_FAIL;
+}
+void Window::Show()
+{
+	ShowWindow(hWnd, SW_SHOWDEFAULT);
+}
+HRESULT Window::Register(const WNDCLASSEX &WC)
+{
+	atom = RegisterClassEx(&WC);
+	if (atom != 0)
+	{
+		return S_OK;
+	}
+	else
+	{
+		return E_FAIL;
+	}
+}
+HRESULT Window::Unregister()
+{
+	return UnregisterClass(MAKEINTATOM(atom), hInst) ? S_OK : E_FAIL;
+}
+void Window::SetTitle(const std::wstring &Title)
+{
+	SetWindowText(hWnd, Title.data());
 }
 
 BOOL Window::HandleMessageLoop()
