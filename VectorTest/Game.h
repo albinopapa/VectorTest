@@ -34,5 +34,6 @@ private:
 	float dt;
 	char fps[16]{};
 
-	AlignedPtr<D3DCOLOR> pSurf;
+	int radius;
+	D3DCOLOR* pSurf;
 };
