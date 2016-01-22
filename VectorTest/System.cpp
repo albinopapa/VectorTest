@@ -122,7 +122,7 @@ int System::Run()
 		done = window->HandleMessageLoop();
 		game->Go();
 	}
-	// Change something
+
 	return 0;
 }
 
