@@ -118,47 +118,64 @@ void D3DGraphics::DrawSurface(int xoff, int yoff, int width, int height, D3DCOLO
 
 void D3DGraphics::DrawSurfaceAlpha(int X, int Y, int Width, int Height, const D3DCOLOR * Surface)
 {
-	LONGLONG xStart = max(-X, 0);
-	LONGLONG xEnd = min(Width, win->Width() - Width);
-	LONGLONG yStart = max(-Y, 0);
-	LONGLONG yEnd = min(Height, win->Height() - Height);
+	int xStart = max(-X, 0);
+	int xEnd = min(Width, win->Width() - X - 1);
+	int yStart = max(-Y, 0);
+	int yEnd = min(Height, win->Height() - Y - 1);
 
-	for (LONGLONG y = yStart; y < yEnd; ++y)
+	SSE alphaMask(_mm_set1_epi16(255));
+
+	for (int y = yStart; y < yEnd; ++y)
 	{
-		LONGLONG surfaceRowOffset = y * Width;
-		LONGLONG backBufferRowOffset = (y + Y) * win->Width();
-		for (LONGLONG x = xStart; x < xEnd; x += 4)
+		int surfaceRowOffset = y * Width;
+		int backBufferRowOffset = (y + Y) * win->Width();
+		for (int x = xStart; x < xEnd; x += 4)
 		{
-			LONGLONG surfaceIndex = x + surfaceRowOffset;
-			LONGLONG backBufferIndex = (x + X) + backBufferRowOffset;
-			PDQWORD mSurface = (PDQWORD)&Surface[surfaceIndex];
-			PDQWORD mBackbuffer = (PDQWORD)&pSysBuffer[backBufferIndex];
+			int surfaceIndex = x + surfaceRowOffset;
+			int backBufferIndex = (x + X) + backBufferRowOffset;
+			PDQWORD mSurfPixel = (PDQWORD)(&Surface[surfaceIndex]);
+			PDQWORD mBackPixel = (PDQWORD)(&(pSysBuffer.get()[backBufferIndex]));
 
-			DQWORD srcLo = SSE(mSurface[surfaceIndex]).UnpackLoBytes().A;
-			DQWORD srcHi = SSE(mSurface[surfaceIndex]).UnpackHiBytes().A;
+			DQWORD mSrcColor = *mSurfPixel;
+			DQWORD mDstColor = *mBackPixel;
 
-			DQWORD sAHi = ReplicateAlpha(srcHi);
-			sAHi = ShuffleLo_Word(sAHi, AAAA);
-			DQWORD sALo = ReplicateAlpha(srcLo);
-			sALo = ShuffleLo_Word(sALo, AAAA);
+			// Unpack source pixels
+			SSE srcLo(SSE(mSrcColor).UnpackLoBytes());
+			SSE srcHi(SSE(mSrcColor).UnpackHiBytes());
 
-			DQWORD dAHi = SSE(_mm_set1_epi16(255)).SubtractWords(sAHi).A;
-			DQWORD dALo = SSE(_mm_set1_epi16(255)).SubtractWords(sALo).A;
+			// Unpack destination pixels
+			SSE dstLo(SSE(mDstColor).UnpackLoBytes());
+			SSE dstHi(SSE(mDstColor).UnpackHiBytes());
 
-			DQWORD rsHi = SSE(sAHi).MultiplyLoWords(srcHi).A;
-			DQWORD rsLo = SSE(sALo).MultiplyLoWords(srcLo).A;
+			// Extract source alpha
+			SSE sAHi(ShuffleHi_Word(srcHi.A, AAAA));
+			sAHi.A = ShuffleLo_Word(sAHi.A, AAAA);
+			SSE sALo(ShuffleHi_Word(srcLo.A, AAAA));
+			sALo.A = ShuffleLo_Word(sALo.A, AAAA);
 
-			DQWORD rdHi = SSE(dAHi).MultiplyLoWords(mBackbuffer[backBufferIndex]).A;
-			DQWORD rdLo = SSE(dALo).MultiplyLoWords(mBackbuffer[backBufferIndex]).A;
+			// Subtract source alpha from 255 to get dst alpha
+			SSE dAHi(alphaMask.SubtractWords(sAHi));
+			SSE dALo(alphaMask.SubtractWords(sALo));
 
-			DQWORD rHi = SSE(rsHi).AddWords(rdHi).A;
-			DQWORD rLo = SSE(rsLo).AddWords(rdLo).A;
+			// Multiply unpacked source pixels by source alpha
+			SSE rsHi(sAHi.MultiplyLoWords(srcHi));
+			SSE rsLo(sALo.MultiplyLoWords(srcLo));
 
-			rHi = SSE(rHi).ShiftRightIWords(8).A;
-			rLo = SSE(rLo).ShiftRightIWords(8).A;
+			// Multiply unpacked dst pixels by dst alpha
+			SSE rdHi(dAHi.MultiplyLoWords(dstHi));
+			SSE rdLo(dALo.MultiplyLoWords(dstLo));
 
-			DQWORD r = SSE(rHi).PackUnsignedSaturateWords(rLo).A;
-			_mm_storeu_si128(mBackbuffer, r);
+			// Add results of src and dst multiplies with each other
+			SSE rHi(rsHi.AddWords(rdHi));
+			SSE rLo(rsLo.AddWords(rdLo));
+
+			// Shift right by 8
+			rHi = rHi.ShiftRightIWords(8);
+			rLo = rLo.ShiftRightIWords(8);
+
+			// Pack pixels and store
+			SSE r(rLo.PackUnsignedSaturateWords(rHi));
+			_mm_storeu_si128(mBackPixel, r.A);
 		}
 	}
 }

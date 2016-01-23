@@ -22,6 +22,7 @@ public:
 private:
 	void UpdateTime();
 	void ComposeFrame();
+	void UpdateFrame();
 
 private:
 	std::shared_ptr<D3DGraphics> gfx;// DirectX Framework Variable
@@ -36,4 +37,9 @@ private:
 
 	int radius;
 	D3DCOLOR* pSurf;
+
+	int numBalls;
+	Vec2f *pos;
+	Vec2f *vel;
+	Vec2f *acc;
 };

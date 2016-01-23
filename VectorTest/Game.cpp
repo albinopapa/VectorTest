@@ -109,7 +109,24 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 	//edx = (Feature_Edx)temp.edx;
 
 	//pSurf = AlignedPtr<D3DCOLOR>(64);
-	radius = 64;
+	numBalls = 2000;
+	pos = new Vec2f[numBalls];
+	vel = new Vec2f[numBalls];
+	acc = new Vec2f[numBalls];
+
+	std::default_random_engine rnd;
+
+	for (int i = 0; i < numBalls; ++i)
+	{
+		std::uniform_real_distribution<float> xRand(0, win->Width());
+		std::uniform_real_distribution<float> yRand(0, win->Height());
+
+		pos[i] = Vec2f(xRand(rnd), yRand(rnd));
+		vel[i] = Vec2f();
+		acc[i] = Vec2f();
+	}
+
+	radius = 8;
 	int diam = radius * 2;
 	float invRad = 1.0f / (float)radius;
 
@@ -138,6 +155,11 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 			pSurf[index] = c;
 		}
 	}
+
+	UINT a = 32;
+	UINT b = 16;
+	UINT c = _andn_u32(a, b);
+
 }
 
 Game::~Game()
@@ -150,6 +172,42 @@ void Game::Go()
 	UpdateTime();
 	ComposeFrame();
 	gfx->EndFrame();
+}
+
+void Game::UpdateFrame()
+{
+	for (int i = 0; i < numBalls; i += 2)
+	{
+		Vector pi(pos[i].x, pos[i].y, pos[i + 1].x, pos[i + 1].y);
+		Vector vi(vel[i].x, vel[i].y, vel[i + 1].x, vel[i + 1].y);
+		Vector ai(acc[i].x, acc[i].y, acc[i + 1].x, acc[i + 1].y);
+		Vec2f temp[2];
+
+		for (int j = i + 1; j < numBalls - 1; j += 2)
+		{
+			Vector pj(pos[j].x, pos[j].y, pos[j + 1].x, pos[j + 1].y);
+			Vector vj(vel[j].x, vel[j].y, vel[j + 1].x, vel[j + 1].y);
+			Vector aj(acc[j].x, acc[j].y, acc[j + 1].x, acc[j + 1].y);
+
+			Vector delta(pj - pi);
+			Vector deltaSqr(delta.MultiDot2(delta));
+			Vector normal(delta.MultiNormalize2());
+			Vector force((Vector(5.0f) / deltaSqr).Min(Vector(0.06f)));
+			Vector accel(normal * force);
+
+			ai += accel;
+			aj -= accel;
+			_mm_storeu_ps((float*)temp, aj.vector);
+			acc[j] = temp[0];
+			acc[j + 1] = temp[1];
+		}
+
+		_mm_storeu_ps((float*)temp, ai.vector);
+
+		acc[i] = temp[0];
+		acc[i + 1] = temp[1];
+
+	}
 }
 
 void Game::UpdateTime()
@@ -173,5 +231,13 @@ void Game::ComposeFrame()
 	std::string text = ss.str();
 	gfx->DrawString(text, 0, 0, fixedSys, D3DCOLOR_XRGB(0, 255, 0));
 
-	gfx->DrawSurfaceAlpha(395, 295, radius * 2, radius * 2, pSurf);
+	int diam = radius * 2;
+
+	for (int i = 0; i < numBalls; ++i)
+	{
+		int px = (int)pos[i].x + 0.5f;
+		int py = (int)pos[i].y + 0.5f;
+
+		gfx->DrawSurfaceAlpha(px, py, diam, diam, pSurf);
+	}
 }

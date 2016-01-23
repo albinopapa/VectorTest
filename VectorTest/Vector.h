@@ -88,6 +88,11 @@ public:
 		vector = _mm_add_ps(vector, V.vector);
 		return (*this);
 	}
+	inline Vector & _vectorcall operator-=(const Vector &V)
+	{
+		vector = _mm_sub_ps(vector, V.vector);
+		return (*this);
+	}
 	inline Vector &_vectorcall operator*=(const Vector &V)
 	{
 		vector = _mm_mul_ps(vector, V.vector);
@@ -109,6 +114,13 @@ public:
 	inline Vector _vectorcall MultiplyAdd(const Vector &V0, const Vector &V1)
 	{
 		return  _mm_add_ps(V1.vector, _mm_mul_ps(vector, V0.vector));
+	}
+	inline Vector _vectorcall MultiDot2(const Vector &V)
+	{
+		FLOAT4 t0 = _mm_mul_ps(vector, V.vector);
+		FLOAT4 t1 = _mm_shuffle_ps(t0, t0, _MM_SHUFFLE(2, 3, 0, 1));
+		t0 = _mm_add_ps(t0, t1);
+		return{ t0 };
 	}
 	inline Vector _vectorcall Dot2(const Vector &A)const
 	{
@@ -157,25 +169,40 @@ public:
 		return DirectX::XMVector3Cross(vector, rhs.vector);
 	}
 
+
+	inline Vector _vectorcall InverseMultiLength2()
+	{
+		return{ _mm_rsqrt_ps(MultiDot2(*this).vector) };
+	}
+	inline Vector _vectorcall InverseLength2()
+	{
+		return{ _mm_rsqrt_ps(Dot2(*this).vector) };
+	}
+	inline Vector _vectorcall InverseLength3()
+	{
+		return{ _mm_rsqrt_ps(Dot3(*this).vector) };
+	}
+	inline Vector _vectorcall InverseLength4()
+	{
+		return{ _mm_rsqrt_ps(Dot4(*this).vector) };
+	}
+
 	// Uses recipracol square root which is a lot faster, but not as accurate
+	inline Vector MultiNormalize2()
+	{
+		return ((*this) * InverseMultiLength2());
+	}
+	inline Vector Normalize2()
+	{
+		return ((*this) * InverseLength2());
+	}
 	inline Vector Normalize3()
 	{
-		DQWORD xyzMaski = _mm_setr_epi32(xyzMask);
-		FLOAT4 xyzMaskf = _mm_castsi128_ps(xyzMaski);
-		vector = _mm_and_ps(vector, xyzMaskf);
-
-		FLOAT4 len = _mm_rsqrt_ps(Dot3(vector).vector);
-		FLOAT4 v = _mm_mul_ps(vector, len);
-
-		return v;
+		return ((*this) * InverseLength3());
 	}
 	inline Vector Normalize4()
 	{
-		FLOAT4 temp = Dot4(vector).vector;
-		FLOAT4 len = _mm_rsqrt_ps(temp);
-		FLOAT4 v = _mm_mul_ps(vector, len);
-
-		return v;
+		return ((*this) * InverseLength4());
 	}
 
 	inline Vector SplatX()const
