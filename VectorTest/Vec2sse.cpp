@@ -1,113 +1,176 @@
-#include "Vec2f.h"
+#include "Vec2SSE.h"
+#include <DirectXMath.h>
 
-Vec2sse::Vec2sse()
+using namespace SSE_Utils;
+
+Vec2SSE::Vec2SSE(){};
+Vec2SSE::Vec2SSE(float S)
 	:
-	v(_mm_setzero_ps())
+	v(_mm_set1_ps(S))	// Set all elements to S (S, S, S, S)
 {
-
+	// Zero out the last two elements as they won't be used (v, v, 0.0f, 0.0f)
+	v = _mm_shuffle_ps(v, _mm_setzero_ps(), _MM_SHUFFLE(0, 0, 2, 1));
 }
-
-Vec2sse::Vec2sse(float X, float Y)
+Vec2SSE::Vec2SSE(float X, float Y)
 	:
-	v(_mm_set_ps(0.0f, 0.0f, Y, X))
+	v(_mm_set_ps(0.0f, 0.0f, Y, X))		// SSE registers are setup backward
 {}
-
-Vec2sse::Vec2sse(const Vec2sse &V)
-	:
-	v(V.v)
-{
-
-}
-
-Vec2sse::Vec2sse(const __m128 &V)
+Vec2SSE::Vec2SSE(const FLOAT4 &V)
 	:
 	v(V)
 {}
-
-Vec2sse::~Vec2sse()
+Vec2SSE::Vec2SSE(const Vector2 &V)
+	:
+	v(_mm_set_ps(0.0f, 0.0f, V.y, V.x))
 {}
 
-Vec2sse Vec2sse::operator-(const Vec2sse &V)const
+// Logical operators
+Vec2SSE Vec2SSE::operator&(const Vec2SSE &V)const
 {
-	return{ _mm_sub_ps(v, V.v) };
+	return{ v & V.v };
+}
+Vec2SSE Vec2SSE::operator|(const Vec2SSE &V)const
+{
+	return v | V.v;
 }
 
-Vec2sse Vec2sse::operator+(const Vec2sse &V)const
+// Logical function
+// same as C = (!A) & B;
+Vec2SSE Vec2SSE::AndNot(const Vec2SSE &V)
 {
-	return{ _mm_add_ps(v, V.v) };
+	return{ SSE_Utils::AndNot(v, V.v) };
 }
 
-Vec2sse Vec2sse::operator*(const Vec2sse &V)const
+// Arithmetic operators
+Vec2SSE Vec2SSE::operator-()const
 {
-	Vec2sse t = _mm_mul_ps(v, V.v);
-	Vec2sse r = _mm_shuffle_ps(t.v, t.v, _MM_SHUFFLE(0, 1, 2, 3));
-	r.v = _mm_add_ps(t.v, r.v);
-	return r;
+	return{ -v };
 }
-
-Vec2sse Vec2sse::operator*(const float &S)const
+Vec2SSE Vec2SSE::operator+(const Vec2SSE &V)const
 {
-	Vec2sse t(_mm_set1_ps(S));
-	t.v = _mm_mul_ps(v, t.v);
-	return t;
+	return v + V.v;
 }
-
-Vec2sse Vec2sse::operator/(const float &S)const
+Vec2SSE Vec2SSE::operator-(const Vec2SSE &V)const
 {
-	Vec2sse t(_mm_set1_ps(S));
-	t.v = _mm_rcp_ps(t.v);
-	t.v = _mm_mul_ps(v, t.v);
-	return t;
+	return v - V.v;
 }
-
-Vec2sse &Vec2sse::operator-=(const Vec2sse &V)
+Vec2SSE Vec2SSE::operator*(const float S)const
 {
-	v = _mm_sub_ps(v, V.v);
+	return v * S;
+}
+Vec2SSE Vec2SSE::operator*(const Vec2SSE &V)const
+{
+	return v * V.v;
+}
+Vec2SSE Vec2SSE::operator/(const float S)const
+{
+	return v / S;
+}
+Vec2SSE Vec2SSE::operator/(const Vec2SSE &V)const
+{
+	return v / V.v;
+}
+Vec2SSE & Vec2SSE::operator+=(const Vec2SSE &V)
+{
+	v += V.v;
+	return (*this);
+}
+Vec2SSE & Vec2SSE::operator-=(const Vec2SSE &V)
+{
+	v -= V.v;
+	return (*this);
+}
+Vec2SSE & Vec2SSE::operator*=(const Vec2SSE &V)
+{
+	v *= V.v;
+	return (*this);
+}
+Vec2SSE & Vec2SSE::operator/=(const Vec2SSE &V)
+{
+	v /= V.v;
 	return (*this);
 }
 
-Vec2sse &Vec2sse::operator+=(const Vec2sse &V)
+// return V1 + ((*this) * V0);
+Vec2SSE Vec2SSE::MultiplyAdd(const Vec2SSE &V0, const Vec2SSE &V1)
 {
-	v = _mm_add_ps(v, V.v);
-	return (*this);
+	return V1.v + (v * V0.v);
+}
+Vec2SSE Vec2SSE::Dot(const Vec2SSE &V)const
+{
+	FLOAT4 t0 = v * V.v;
+	FLOAT4 t1 = _mm_shuffle_ps(t0, ZeroPS, _MM_SHUFFLE(0, 0, 0, 1));
+	t0 += t1;
+
+	return t0;
 }
 
-Vec2sse Vec2sse::LenSqr()const
+Vec2SSE Vec2SSE::Cross(const Vec2SSE &V)const
 {
-	Vec2sse t;
-	t.v = _mm_mul_ps(v, v);
-	__m128 r = _mm_shuffle_ps(t.v, t.v, _MM_SHUFFLE(0, 1, 2, 3));
-	t.v = _mm_add_ps(r, t.v);
-	return t;
+	/*
+	((x0 * y1) - (y0 * x1));
+	*/
+	FLOAT4 xy = v;
+	FLOAT4 yx = _mm_shuffle_ps(V.v, _mm_setzero_ps(), _MM_SHUFFLE(0, 1, 0, 0));
+	FLOAT4 t0 = xy * yx;
+	FLOAT4 t1 = _mm_shuffle_ps(t0, ZeroPS, _MM_SHUFFLE(0, 0, 0, 1));
+	t0 -= t1;
+
+	return t0;
 }
 
-Vec2sse Vec2sse::InvLength()const
+Vec2SSE Vec2SSE::InverseLength()
 {
-	Vec2sse t;
-	t.v = _mm_mul_ps(v, v);
-	__m128 r = _mm_shuffle_ps(t.v, t.v, _MM_SHUFFLE(0, 1, 2, 3));
-	t.v = _mm_add_ps(r, t.v);
-	t.v = _mm_rsqrt_ps(t.v);
-	return t;
+	return{ _mm_rsqrt_ps(Dot(*this).v) };
 }
 
-Vec2sse Vec2sse::Length()const
+Vec2SSE Vec2SSE::Normalize()
 {
-	Vec2sse t;
-	t.v = _mm_mul_ps(v, v);
-	__m128 r = _mm_shuffle_ps(t.v, t.v, _MM_SHUFFLE(0, 1, 2, 3));
-	t.v = _mm_add_ps(r, t.v);
-	t.v = _mm_sqrt_ps(t.v);
-	return t;
+	return ((*this) * InverseLength());
 }
 
-Vec2sse Vec2sse::Normalize()const
+Vec2SSE Vec2SSE::SplatX()const
 {
-	Vec2sse t;
-	t.v = _mm_mul_ps(v, v);
-	__m128 r = _mm_shuffle_ps(t.v, t.v, _MM_SHUFFLE(0, 1, 2, 3));
-	t.v = _mm_add_ps(r, t.v);
-	t.v = _mm_rsqrt_ps(t.v);
-	t.v = _mm_mul_ps(v, t.v);
-	return t;
+	return _mm_shuffle_ps(v, v, _MM_SHUFFLE(0, 0, 0, 0));
+}
+Vec2SSE Vec2SSE::SplatY()const
+{
+	return _mm_shuffle_ps(v, v, _MM_SHUFFLE(1, 1, 1, 1));
+}
+
+Vector2 Vec2SSE::StoreFloat()const
+{
+	Vector2 rhs;
+	rhs.x = X();
+	rhs.y = Y();
+
+	return rhs;
+}
+Vector2 Vec2SSE::StoreInt()const
+{
+	Vector2 temp;
+	FLOAT4 t = Shuffle<Ayx>(v, ZeroPS);
+	temp.b = _mm_cvt_ss2si(v);	
+	temp.g = _mm_cvt_ss2si(t);
+		
+	return temp;
+}
+Vector2 Vec2SSE::StoreIntCast()
+{
+	Vector2 temp;
+	Vector4 t;
+	_mm_store_si128((PDQWORD)&t, _mm_castps_si128(v));
+	temp.ix = t.iX;
+	temp.iy = t.iY;
+	return temp;
+}
+
+float Vec2SSE::X()const
+{
+	return _mm_cvtss_f32(v);
+}
+float Vec2SSE::Y()const
+{
+	Vec2SSE t = SplatY();
+	return _mm_cvtss_f32(t.v);
 }

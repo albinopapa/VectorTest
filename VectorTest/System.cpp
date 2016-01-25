@@ -51,22 +51,22 @@ LRESULT System::MsgProc(UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		else
 		{
-			kServ->OnKeyPressed(wParam);
+			kServ->OnKeyPressed((UINT)wParam);
 		}
 		break;
 	case WM_KEYUP:
-		kServ->OnKeyReleased(wParam);
+		kServ->OnKeyReleased((UINT)wParam);
 		break;
 	case WM_CHAR:
-		kServ->OnChar(wParam);
+		kServ->OnChar((UINT)wParam);
 		break;
 		// ************ END KEYBOARD MESSAGES ************ //
 
 		// ************ MOUSE MESSAGES ************ //
 	case WM_MOUSEMOVE:
 	{
-		int x = (short)LOWORD(lParam);
-		int y = (short)HIWORD(lParam);
+		UINT x = (short)LOWORD(lParam);
+		UINT y = (short)HIWORD(lParam);
 		if (x > 0 && x < window->Width() && y > 0 && y < window->Height())
 		{
 			mServ->OnMouseMove(x, y);

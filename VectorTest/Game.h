@@ -10,7 +10,11 @@
 #include "Timer.h"
 #include "Vec2f.h"
 #include "Vector.h"
+#include "Vec2SSE.h"
+// WIP
 #include "AlignedPtr.h"
+
+
 
 class Game
 {

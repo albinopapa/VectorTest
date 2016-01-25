@@ -15,7 +15,7 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 	mouse(new MouseClient(*mServ.get())),
 	win(rWin)
 {
-	srand(time(NULL));
+	srand((UINT)time(NULL));
 	LoadFont(&fixedSys, "Fonts\\Fixedsys16x28.bmp", 16, 28, 32);
 
 	//enum Feature_Ecx
@@ -118,14 +118,16 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 
 	for (int i = 0; i < numBalls; ++i)
 	{
-		std::uniform_real_distribution<float> xRand(0, win->Width());
-		std::uniform_real_distribution<float> yRand(0, win->Height());
+		std::uniform_real_distribution<float> xRand(0.0f, (float)win->Width());
+		std::uniform_real_distribution<float> yRand(0.0f, (float)win->Height());
 
 		pos[i] = Vec2f(xRand(rnd), yRand(rnd));
 		vel[i] = Vec2f();
 		acc[i] = Vec2f();
 	}
 
+
+	// Create surface
 	radius = 8;
 	int diam = radius * 2;
 	float invRad = 1.0f / (float)radius;
@@ -155,10 +157,13 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 			pSurf[index] = c;
 		}
 	}
+	// Done creating surface
 
-	UINT a = 32;
-	UINT b = 16;
-	UINT c = _andn_u32(a, b);
+	Vec2SSE a(1.0f, 2.0f), b(3.0f);
+	Vec2SSE c(5.0f, 10.0f);
+
+	c.v = MirrorXY(c.v);
+	int at = 0;
 
 }
 

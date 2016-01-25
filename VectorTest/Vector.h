@@ -3,23 +3,9 @@
 #include <DirectXMath.h>
 #include "SSE.h"
 
-// Used for store operations
-Align16
-union Vector4
-{
-	struct
-	{
-		float x, y, z, w;
-	};
-	struct
-	{
-		UINT b, g, r, a;
-	};
-	struct
-	{
-		UINT iX, iY, iZ, iW;
-	};
-};
+
+using namespace SSE_Utils;
+
 
 Align16
 class Vector

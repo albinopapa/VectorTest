@@ -5,8 +5,7 @@
 #endif
 
 // Include for SSE 1/2/3
-#include <pmmintrin.h>
-
+#include <intrin.h>
 #include <memory>
 #include "Math.h"
 
@@ -20,7 +19,7 @@ typedef __m128i DQWORD, *PDQWORD;
 //*   SD = Scalar Double precision float ie. double				*/
 //*   PD = Packed Double precision float ie. two doubles		*/
 //*																*/
-//*   The same notation will be used in this file				*/
+//*   The same notation will be used in this file like ZeroPS	*/
 //***************************************************************/
 
 
@@ -110,8 +109,6 @@ enum ShuffleOrder
 	WZYX = Awz | Byx
 };
 
-#define Replicate_ps _mm_set1_ps
-
 #define xMask		0xFFFFFFFF, 0x0, 0x0, 0x0
 #define yMask		0x0, 0xFFFFFFFF, 0x0, 0x0
 #define zMask		0x0, 0x0, 0xFFFFFFFF, 0x0
@@ -120,251 +117,161 @@ enum ShuffleOrder
 #define xyMask		0xFFFFFFFF, 0xFFFFFFFF, 0x0, 0x0
 #define xyzMask		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x0
 
-/*
-Reverse
-Example:
-FLOAT4 res = Reverse(x,y,z,w)
-res = w,z,y,x
-*/
-#define ReverseVector(A) (Shuffle(A, A, WZYX))
+#define LoadFloat(X) _mm_set1_ps((X))
+#define SetFloat4(f0, f1, f2, f3) (_mm_set_ps(f3, f2, f1, f0))
 
-#pragma region Replicate
-/*
-Replicate
-Example:
-x, y, z, w to (x, y, x, y)
-*/
-#define ReplicateXY(A) (Shuffle(A, A, XYXY))
-#define ReplicateXZ(A) (Shuffle(A, A, XZXZ))
-#define ReplicateXW(A) (Shuffle(A, A, XWXW))
+#define ZeroPS _mm_setzero_ps()
+#define OnePS _mm_set1_ps(1.0f)
+#define HalfPS _mm_set1_ps(0.5f);
 
-#define ReplicateYX(A) (Shuffle(A, A, YXYX))
-#define ReplicateYZ(A) (Shuffle(A, A, YZYZ))
-#define ReplicateYW(A) (Shuffle(A, A, YWYW))
+#define ConvertToFloat4(A) _mm_cvtepi32_ps((A))
+#define ConvertToDQWORD(A) _mm_cvtps_epi32((A))
+#define TruncateConvertToDQWORD(A) _mm_cvttps_epi32((A))
+#define CastToFloat4(A) _mm_castsi128_ps((A))
+#define CastToDQWORD(A) _mm_castps_si128((A))
 
-#define ReplicateZX(A) (Shuffle(A, A, ZXZX))
-#define ReplicateZY(A) (Shuffle(A, A, ZYZY))
-#define ReplicateZW(A) (Shuffle(A, A, ZWZW))
-#pragma endregion Replicate shuffling
+#define StreamPS _mm_stream_ps
 
-#pragma region Mirror
-/*
-Mirror??
-Example:
-A = x, y, z, w
-B = MirrorXY(A)
-B = Ax, Ay, Ay, Ax
-*/
-#define MirrorXY(A) (Shuffle(A, A, XYYX))
-#define MirrorXZ(A) (Shuffle(A, A, XZZX))
-#define MirrorXW(A) (Shuffle(A, A, XWWX))
+// SSE Integer Utils
 
-#define MirrorYX(A) (Shuffle(A, A, YXXY))
-#define MirrorYZ(A) (Shuffle(A, A, YZZY))
-#define MirrorYW(A) (Shuffle(A, A, YWWY))
+enum ShiftCount128
+{
+	// ARGBARGBARGBARGB
+	SL_RGBA_RGBA_RGBA_RGB0 = 15,
+	SL_GBAR_GBAR_GBAR_GB00 = 14,
+	SL_BARG_BARG_BARG_B000 = 13,
+	SL_ARGB_ARGB_ARGB_0000 = 12,
+	SL_RGBA_RGBA_RGB0_0000 = 11,
+	SL_GBAR_GBAR_GB00_0000 = 10,
+	SL_BARG_BARG_B000_0000 = 9,
+	SL_ARGB_ARGB_0000_0000 = 8,
+	SL_RGBA_RGB0_0000_0000 = 7,
+	SL_GBAR_GB00_0000_0000 = 6,
+	SL_BARG_B000_0000_0000 = 5,
+	SL_ARGB_0000_0000_0000 = 4,
+	SL_RGB0_0000_0000_0000 = 3,
+	SL_GB00_0000_0000_0000 = 2,
+	SL_B000_0000_0000_0000 = 1,
 
-#define MirrorZX(A) (Shuffle(A, A, ZXXZ))
-#define MirrorZY(A) (Shuffle(A, A, ZYYZ))
-#define MirrorZW(A) (Shuffle(A, A, ZWWZ))
+	SR_0ARG_BARG_BARG_B0RG = 15,
+	SR_00AR_GBAR_GBAR_GB0R = 14,
+	SR_000A_RGBA_RGBA_RGB0 = 13,
+	SR_0000_ARGB_ARGB_ARGB = 12,
+	SR_0000_0ARG_BARG_B0RG = 11,
+	SR_0000_00AR_GBAR_GB0R = 10,
+	SR_0000_000A_RGBA_RGB0 = 9,
+	SR_0000_0000_ARGB_ARGB = 8,
+	SR_0000_0000_0ARG_B0RG = 7,
+	SR_0000_0000_00AR_GB0R = 6,
+	SR_0000_0000_000A_RGB0 = 5,
+	SR_0000_0000_0000_ARGB = 4,
+	SR_0000_0000_0000_0ARG = 3,
+	SR_0000_0000_0000_00AR = 2,
+	SR_0000_0000_0000_000A = 1
+};
 
-#define MirrorWX(A) (Shuffle(A, A, WXXW))
-#define MirrorWY(A) (Shuffle(A, A, WYYW))
-#define MirrorWZ(A) (Shuffle(A, A, WZZW))
-#pragma endregion Mirror shuffling
+enum Shuffle_Words_or_DWords
+{
+	// Roll
+	RGBA = Ayz | Bwx,
+	GBAR = Azw | Bxy,
+	BARG = Awx | Byz,
 
-/*
-Repeat
-float a = 0.0f
-FLOAT4 A = Repeat(a);
-A = 0.0f, 0.0f, 0.0f, 0.0f
-*/
-#define Repeat _mm_set1_ps
+	// Reverse
+	BGRA = Awz | Byx,
 
-/*
-SetFloat4
-Creates a FLOAT4 using 4 floats
-SetFloat4(f0, f1, f2, f3).  SetFloat4 reverses the values so that
-they appear in the order they were set
-*/
-#define SetFloat4(f0, f1, f2, f3) (_mm_setr_ps(f0, f1, f2, f3))
+	// Replicate
+	AAAA = Aww | Bww
+};
 
-/*
-MoveHiLo
-Example:
-A = x, y, z, w
-B = x, y, z, w
-res = Bz, Bw, Az, Aw;
-*/
-#define MoveHiLo _mm_movehl_ps
-/*
-MoveLoHi
-Example:
-A = x, y, z, w
-B = x, y, z, w
-res = Ax, Ay, Bx, By
-*/
-#define MoveLoHi _mm_movelh_ps
+#define ShiftLeft_128 _mm_slli_si128
+#define ShiftRight_128 _mm_srli_si128
 
-/*
-Add
-A + B
-*/
-#define Add _mm_add_ps
+#define ShuffleHi_Word _mm_shufflehi_epi16
+#define ShuffleLo_Word _mm_shufflelo_epi16
 
-/*
-Sub
-A - B
-*/
-#define Sub _mm_sub_ps
+#define Zero128 _mm_setzero_si128()
+#define Replicate32 _mm_set1_epi32
 
-/*
-Mul
-A * B
-*/
-#define Mul _mm_mul_ps
+// Roll DWORDs 
+#define RollR32_1(A) (_mm_shuffle_epi32(A, BARG))
+#define RollR32_2(A) (_mm_shuffle_epi32(A, GBAR))
+#define RollR32_3(A) (_mm_shuffle_epi32(A, RGBA))
 
-/*
-Div
-A * recip(B)
-It's faster to take the reciprocal of a number and multiply 
-than to divide
-*/
-#define Div _mm_div_ps
+#define RollL32_1(A) RollR32_3(A)
+#define RollL32_2(A) RollR32_2(A)
+#define RollL32_3(A) RollR32_1(A)
 
-/*
-Recip
-1.0f / A
-*/
-#define Recip _mm_rcp_ps
+// Shift DWORDs
+#define ShiftL32_1(A) (_mm_slli_si128(A, SL_ARGB_ARGB_ARGB_0000))
+#define ShiftL32_2(A) (_mm_slli_si128(A, SL_ARGB_ARGB_0000_0000))
+#define ShiftL32_3(A) (_mm_slli_si128(A, SL_ARGB_0000_0000_0000))
 
-/*
-Sqrt
-square root
-*/
-#define Sqrt _mm_sqrt_ps
+#define ShiftR32_1(A) (_mm_srli_si128(A, SR_0000_ARGB_ARGB_ARGB))
+#define ShiftR32_2(A) (_mm_srli_si128(A, SR_0000_0000_ARGB_ARGB))
+#define ShiftR32_3(A) (_mm_srli_si128(A, SR_0000_0000_0000_ARGB))
 
-/*
-RecipSqrt
-1.0 / sqrt(A)
-*/
-#define RecipSqrt _mm_rsqrt_ps
+#define LoadU_32(A)(_mm_loadu_si128((DQWORD*)A))
+#define LoadA_32(A)(_mm_load_si128((DQWORD*)A))
+#define StoreU_32(A, B)(_mm_storeu_si128((DQWORD*)A, B))
+#define StoreA_32(A, B)(_mm_store_si128((DQWORD*)A, B))
 
-/*
-AndNot
-Inverts the bits in A and (and's) them with B
-A = 0011, B = 1010
-C = AndNot(A, B)  (1100 & 1010)
-C = 1000
-*/
-#define AndNot _mm_andnot_ps
+#define Set32(A, B, C, D)(_mm_set_epi32((int)A, (int)B, (int)C, (int)D))
 
-/*
-And
-Logical and ( & )
-*/
-#define And _mm_and_ps
+// Replicate alpha channel
+#define ReplicateAlpha(A) (ShuffleHi_Word(A, AAAA))
+// End of SSE Integer Utils
 
-/*
-Or
-Logical or ( | )
-*/
-#define Or _mm_or_ps
 
-#define gt _mm_cmpgt_ps
-#define lt _mm_cmplt_ps
-#define equals _mm_cmpeq_ps
-#define noteq _mm_cmpneq_ps
-#define lte _mm_cmple_ps
-#define gte _mm_cmpge_ps
-
-/*
-Roll(FLOAT4, ShuffleOrder) or Roll(FLOAT4, ShuffleConstants)
-Shuffles the elements to mimic rolling
-A = 1.0f, 2.0f, 3.0f, 4.0f
-Roll(A, ShuffleOrder::WXYZ) 
-A = 4.0f, 1.0f, 2.0f, 3.0f
-Roll(A, ShuffleConstants::Ayz + ShuffleConstants::Bwx)
-A = 1.0f, 2.0f, 3.0f, 4.0f
-*/
-#define Roll(A, B) (Shuffle((A), (A), (B)))
-
-/*
-RollR
-Shifts all elements to the right, and puting the far right element
-on the left.
-X, Y, Z, W becomes W, X, Y, Z
-*/
-#define RollR(A) (_mm_shuffle_ps(A, A, Awx + Byz))
-
-/*
-RollL
-Shifts all elements to the left and putting the far left element
-on the right
-X, Y, Z, W becomes Y, Z, W, X
-*/
-#define RollL(A) (_mm_shuffle_ps(A, A, Ayz + Bwx))
-
-/*
-Zerops returns a FLOAT4 with all elements set to 0.0f
-A = Zerops
-A = 0.0f, 0.0f, 0.0f, 0.0f
-*/
-#define Zerops _mm_setzero_ps()
-
-/*
-Oneps sets all elements to 1.0f
-A = Oneps
-A = 1.0f, 1.0f, 1.0f, 1.0f
-*/
-#define Oneps _mm_set1_ps(1.0f)
-
-/*
-ConvertToFloat4
-Converts DQWORD (__m128i) to FLOAT4 (__m128)
-Converts the four ints to four floats 
-1, 2, 10, 20 becomes 1.0f, 2.0f, 10.0f, 20.0f
-*/
-#define CvtToFloat4 _mm_cvtepi32_ps
-
-/*
-ConvertToDQWord
-Converts FLOAT4 (__m128) to DQWORD (__m128i)
-Converts the four floats to four ints, rounding to nearest whole number
-1.1f, 2.0092f, 10.9f, 2.0f becomes 1, 2, 11, 2
-*/
-#define CvtToDQWord _mm_cvtps_epi32
-
-/*
-CvtTrunc
-Converts FLOAT4 to DQWORD by first truncating or removing everything 
-to the right of the decimal
-*/
-#define CvtTrunc _mm_cvttps_epi32
-
-/*
-CastToFloat4
-Casts the binary value from DQWORD to FLOAT4, no conversion or rounding
-is done.
-*/
-#define CastToFloat4 _mm_castsi128_ps
-
-/*
-CastToDQWord
-Casts the binary value from FLOAT4 to DQWORD, no conversion is done.
-*/
-#define CastToDQWord _mm_castps_si128
-
-/*
-Streamps
-Bypasses the cpu cache.  Use when you want to copy large amounts of data 
-from one location to another and aren't going to be processing it.
-
-*/
-#define Streamps _mm_stream_ps
-
-#define Minps _mm_min_ps
-#define Maxps _mm_max_ps
-
+// Used for store operations
+Align16
+union Vector2
+{
+	struct
+	{
+		float x, y;
+	};
+	struct
+	{
+		UINT b, g;
+	};
+	struct
+	{
+		UINT ix, iy;
+	};
+};
+Align16
+union Vector3
+{
+	struct
+	{
+		float x, y, z;
+	};
+	struct
+	{
+		UINT b, g, r;
+	};
+	struct
+	{
+		UINT ix, iy, iz;
+	};
+};
+Align16
+union Vector4
+{
+	struct
+	{
+		float x, y, z, w;
+	};
+	struct
+	{
+		UINT b, g, r, a;
+	};
+	struct
+	{
+		UINT iX, iY, iZ, iW;
+	};
+};
 
 Align16 
 struct Matrix
@@ -372,130 +279,283 @@ struct Matrix
 	FLOAT4 r[4];
 };
 
-namespace float_sse
+namespace SSE_Utils
 {
-	inline FLOAT4 _vectorcall operator+(const FLOAT4 &A, const FLOAT4 &B)
+	namespace Float4_Utils
 	{
-		return Add(A, B);
-	}
-	inline FLOAT4 _vectorcall operator+=(FLOAT4 &A, const FLOAT4 &B)
-	{
-		A = Add(A, B);
-		return A;
-	}
-	inline FLOAT4 _vectorcall operator-(const FLOAT4 &A, const FLOAT4 &B)
-	{
-		return Sub(A, B);
-	}
-	inline FLOAT4 _vectorcall operator*(const FLOAT4 &A, const FLOAT4 &B)
-	{
-		return Mul(A, B);
-	}
-	inline FLOAT4 _vectorcall operator*(const FLOAT4 &A, const float &B)
-	{
-		return A * Repeat(B);
-	}
-	inline FLOAT4 _vectorcall operator/(const FLOAT4 &A, const FLOAT4 &B)
-	{
-		return A * Recip(B);
-	}
-	inline FLOAT4 _vectorcall operator-(const FLOAT4 &A)
-	{
-		return Sub(Zerops, A);
-	}
+		// Logical operators
+		inline FLOAT4 _vectorcall operator&(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_and_ps(A, B);
+		}
+		inline FLOAT4 _vectorcall operator|(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_or_ps(A, B);
+		}
+		inline FLOAT4 _vectorcall AndNot(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_andnot_ps(A, B);
+		}
 
-	// Logical operators
-	inline FLOAT4 _vectorcall operator&(const FLOAT4 &A, const FLOAT4 &B)
-	{
-		return And(A, B);
-	}
-	inline FLOAT4 _vectorcall operator|(const FLOAT4 &A, const FLOAT4 &B)
-	{
-		return Or(A, B);
-	}
-	inline FLOAT4 _vectorcall operator~(const FLOAT4 &A)
-	{
-		return AndNot(A, A);
-	}
+		// Arithmetic operator overloads
+		inline FLOAT4 _vectorcall operator-(const FLOAT4 &A)
+		{
+			return _mm_sub_ps(_mm_setzero_ps(), A);
+		}
+		inline FLOAT4 _vectorcall operator+(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_add_ps(A, B);
+		}
+		inline FLOAT4 _vectorcall operator-(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_sub_ps(A, B);
+		}
+		inline FLOAT4 _vectorcall operator*(const FLOAT4 &A, const float B)
+		{
+			return _mm_mul_ps(A, _mm_set_ps1(B));
+		}
+		inline FLOAT4 _vectorcall operator/(const FLOAT4 &A, const float B)
+		{
+			FLOAT4 temp = _mm_set_ps1(B);
+			return _mm_div_ps(A, temp);
+		}
 
-	// Compare operators
-	inline FLOAT4 _vectorcall operator>(const FLOAT4 &A, const FLOAT4 &B)
-	{
-		
-		return gt(A, B);
-	}
-	inline FLOAT4 _vectorcall operator<(const FLOAT4 &A, const FLOAT4 &B)
-	{
-		return lt(A, B);
-	}
-	/*inline FLOAT4 _vectorcall operator==(const FLOAT4 &A, const FLOAT4 &B)
-	{
-		return eq(A, B);
-	}*/
-	inline FLOAT4 _vectorcall operator>=(const FLOAT4 &A, const FLOAT4 &B)
-	{
-		return gte(A, B);
-	}
-	inline FLOAT4 _vectorcall operator<=(const FLOAT4 &A, const FLOAT4 &B)
-	{
-		return lte(A, B);
-	}
-	inline FLOAT4 _vectorcall operator!=(const FLOAT4 &A, const FLOAT4 &B)
-	{
-		return noteq(A, B);
-	}
+		// Vector multiply and divide
+		inline FLOAT4 _vectorcall operator*(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_mul_ps(A, B);
+		}
+		inline FLOAT4 _vectorcall operator/(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_div_ps(A, B);
+		}
 
-	// Vector operations
-	inline FLOAT4 _vectorcall DotProduct(const FLOAT4 &A, const FLOAT4 &B)
-	{
-		FLOAT4 t0 = A * B;
-		FLOAT4 t5 = _mm_hadd_ps(t0, t0);
-		t5 = _mm_hadd_ps(t5, t5);
-		return t5;
-	}
-	inline FLOAT4 _vectorcall LengthSqr(const FLOAT4 &A)
-	{
-		return DotProduct(A, A);
-	}
-	inline FLOAT4 _vectorcall Length(const FLOAT4 &A)
-	{
-		return Sqrt(LengthSqr(A));
-	}
-	inline FLOAT4 _vectorcall RecipLength(const FLOAT4 &A)
-	{
-		return RecipSqrt(LengthSqr(A));
-	}
-	inline FLOAT4 _vectorcall Normalize(const FLOAT4 &A)
-	{
-		return A * RecipLength(A);
-	}
-	inline FLOAT4 _vectorcall Interpolate(const FLOAT4 &A, const FLOAT4 &B, const FLOAT4 &Step)
-	{
-		FLOAT4 dist = (B - A);
-		FLOAT4 rcpDist = Length(dist);
-		FLOAT4 stepDist = Step / rcpDist;
-		FLOAT4 deltaDist = dist * stepDist;
-		FLOAT4 dif = A + deltaDist;
-		return dif;
-	}
-	inline FLOAT4 _vectorcall Ceil(const FLOAT4 &A)
-	{
-		DQWORD b = _mm_cvttps_epi32(A);
-		FLOAT4 B = _mm_cvtepi32_ps(b);
-		FLOAT4 fMask = B < A;
-		DQWORD iMask = _mm_castps_si128(fMask);
-		return B - _mm_cvtepi32_ps(iMask);
-	}
-	inline FLOAT4 _vectorcall Floor(const FLOAT4 &A)
-	{
-		DQWORD b = _mm_cvttps_epi32(A);
-		FLOAT4 B = _mm_cvtepi32_ps(b);
-		FLOAT4 fMask = B > A;
-		DQWORD iMask = _mm_castps_si128(fMask);
-		fMask = _mm_cvtepi32_ps(iMask);
-		return B + fMask;
-	}
+		// Assignment plus arithmetic
+		inline FLOAT4 &_vectorcall operator+=(FLOAT4 &A, const FLOAT4 &B)
+		{
+			A = _mm_add_ps(A, B);
+			return A;
+		}
+		inline FLOAT4 &_vectorcall operator-=(FLOAT4 &A, const FLOAT4 &B)
+		{
+			A = _mm_sub_ps(A, B);
+			return A;
+		}
+		inline FLOAT4 &_vectorcall operator*=(FLOAT4 &A, const FLOAT4 &B)
+		{
+			A = _mm_mul_ps(A, B);
+			return A;
+		}
+		inline FLOAT4 &_vectorcall operator/=(FLOAT4 &A, const FLOAT4 &B)
+		{
+			FLOAT4 temp = _mm_rcp_ps(B);
+			A = _mm_mul_ps(A, temp);
+			return A;
+		}
 
+		// Compare operators
+		inline FLOAT4 _vectorcall operator>(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_cmpgt_ps(A, B);
+		}
+		inline FLOAT4 _vectorcall operator<(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_cmplt_ps(A, B);
+		}
+		inline FLOAT4 _vectorcall operator==(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_cmpeq_ps(A, B);
+		}
+		inline FLOAT4 _vectorcall operator>=(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_cmpge_ps(A, B);
+		}
+		inline FLOAT4 _vectorcall operator<=(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_cmple_ps(A, B);
+		}
+		inline FLOAT4 _vectorcall operator!=(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_cmpneq_ps(A, B);
+		}
+
+		// Math functions
+		inline FLOAT4 _vectorcall Ceil(const FLOAT4 &A)
+		{
+			DQWORD b = _mm_cvttps_epi32(A);
+			FLOAT4 B = _mm_cvtepi32_ps(b);
+			FLOAT4 fMask = B < A;
+			DQWORD iMask = _mm_castps_si128(fMask);
+			return B - _mm_cvtepi32_ps(iMask);
+		}
+		inline FLOAT4 _vectorcall Floor(const FLOAT4 &A)
+		{
+			DQWORD b = _mm_cvttps_epi32(A);
+			FLOAT4 B = _mm_cvtepi32_ps(b);
+			FLOAT4 fMask = B > A;
+			DQWORD iMask = _mm_castps_si128(fMask);
+			fMask = _mm_cvtepi32_ps(iMask);
+			return B + fMask;
+		}
+		inline FLOAT4 _vectorcall Min(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_min_ps(A, B);
+		}
+		inline FLOAT4 _vectorcall Max(const FLOAT4 &A, const FLOAT4 &B)
+		{
+			return _mm_max_ps(A, B);
+		}
+		inline FLOAT4 _vectorcall Abs(const FLOAT4 &A)
+		{
+			return Max(ZeroPS - A, A);
+		}
+
+#pragma region Shuffling
+		// Shuffle overloads
+		template<const unsigned int A, const unsigned int B,
+			const unsigned int C, const unsigned int D>
+			inline FLOAT4 _vectorcall Shuffle(const FLOAT4 &V0, const FLOAT4 &V1)
+		{
+			return _mm_shuffle_ps(V0, V1, _MM_SHUFFLE(D, C, B, A));
+		}
+
+		template<const unsigned int A, const unsigned int B,
+			const unsigned int C, const unsigned int D>
+			inline FLOAT4 _vectorcall Shuffle(const FLOAT4 &V)
+		{
+			return Shuffle<A, B, C, D>(V, V);
+		}
+
+		template<unsigned int A>
+		inline FLOAT4 _vectorcall Shuffle(const FLOAT4 &V)
+		{
+			return _mm_shuffle_ps(V, V, A);
+		}
+
+		template<unsigned int A>
+		inline FLOAT4 _vectorcall Shuffle(const FLOAT4 &V0, const FLOAT4 &V1)
+		{
+			return _mm_shuffle_ps(V0, V1, A);
+		}
+
+		// Component mirroring functions
+		inline FLOAT4 _vectorcall MirrorXY(const FLOAT4 &V)
+		{
+			return Shuffle<XYYX>(V);
+		}
+		inline FLOAT4 _vectorcall MirrorXZ(const FLOAT4 &V)
+		{
+			return Shuffle<XZZX>(V);
+		}
+		inline FLOAT4 _vectorcall MirrorXW(const FLOAT4 &V)
+		{
+			Shuffle<XWWX>(V);
+		}
+
+		inline FLOAT4 _vectorcall MirrorYX(const FLOAT4 &V)
+		{
+			Shuffle<YXXY>(V);
+		}
+		inline FLOAT4 _vectorcall MirrorYZ(const FLOAT4 &V)
+		{
+			Shuffle<YZZY>(V);
+		}
+		inline FLOAT4 _vectorcall MirrorYW(const FLOAT4 &V)
+		{
+			Shuffle<YWWY>(V);
+		}
+
+		inline FLOAT4 _vectorcall MirrorZX(const FLOAT4 &V)
+		{
+			return Shuffle<ZXXZ>(V);
+		}
+		inline FLOAT4 _vectorcall MirrorZY(const FLOAT4 &V)
+		{
+			return Shuffle<ZYYZ>(V);
+		}
+		inline FLOAT4 _vectorcall MirrorZW(const FLOAT4 &V)
+		{
+			return Shuffle<ZWWZ>(V);
+		}
+
+		inline FLOAT4 _vectorcall MirrorWX(const FLOAT4 &V)
+		{
+			return Shuffle<WXXW>(V);
+		}
+		inline FLOAT4 _vectorcall MirrorWY(const FLOAT4 &V)
+		{
+			return Shuffle<WYYW>(V);
+		}
+		inline FLOAT4 _vectorcall MirrorWZ(const FLOAT4 &V)
+		{
+			return Shuffle<WZZW>(V);
+		}
+
+		// Replicate component functions
+		inline FLOAT4 _vectorcall ReplicateXY(const FLOAT4 &V)
+		{
+			return Shuffle<XYXY>(V);
+		}
+		inline FLOAT4 _vectorcall ReplicateXZ(const FLOAT4 &V)
+		{
+			return Shuffle<XZXZ>(V);
+		}
+		inline FLOAT4 _vectorcall ReplicateXW(const FLOAT4 &V)
+		{
+			return Shuffle<XWXW>(V);
+		}
+
+		inline FLOAT4 _vectorcall ReplicateYX(const FLOAT4 &V)
+		{
+			return Shuffle<YXYX>(V);
+		}
+		inline FLOAT4 _vectorcall ReplicateYZ(const FLOAT4 &V)
+		{
+			return Shuffle<YZYZ>(V);
+		}
+		inline FLOAT4 _vectorcall ReplicateYW(const FLOAT4 &V)
+		{
+			return Shuffle<YWYW>(V);
+		}
+
+		inline FLOAT4 _vectorcall ReplicateZX(const FLOAT4 &V)
+		{
+			return Shuffle<ZXZX>(V);
+		}
+		inline FLOAT4 _vectorcall ReplicateZY(const FLOAT4 &V)
+		{
+			return Shuffle<ZYZY>(V);
+		}
+		inline FLOAT4 _vectorcall ReplicateZW(const FLOAT4 &V)
+		{
+			return Shuffle<ZWZW>(V);
+		}
+
+		inline FLOAT4 _vectorcall ReverseVector(const FLOAT4 &V)
+		{
+			return Shuffle<WZYX>(V);
+		}
+
+		// Same as ReplicateZW if V0 and V1 are the same
+		inline FLOAT4 _vectorcall MoveHiLo(const FLOAT4 &V0, const FLOAT4 &V1)
+		{
+			return _mm_movehl_ps(V0, V1);
+		}
+		// Same as ReplicateXY if V0 and V1 are the same
+		inline FLOAT4 _vectorcall MoveLoHi(const FLOAT4 &V0, const FLOAT4 &V1)
+		{
+			return _mm_movelh_ps(V0, V1);
+		}
+		inline FLOAT4 _vectorcall RollR(const FLOAT4 &V)
+		{
+			return Shuffle<WXYZ>(V);
+		}
+		inline FLOAT4 _vectorcall RollL(const FLOAT4 &V)
+		{
+			return Shuffle<YZWX>(V);
+		}
+#pragma endregion
+	}
 	// Matrix operations
 	/*inline void _vectorcall Transpose(const Matrix &M, Matrix &Out)
 	{

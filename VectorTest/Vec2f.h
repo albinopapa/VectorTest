@@ -22,29 +22,3 @@ public:
 
 	float x, y;
 };
-
-_MM_ALIGN16 
-class Vec2sse
-{
-public:
-	Vec2sse();
-	Vec2sse(float X, float Y);
-	Vec2sse(const __m128 &V);
-	Vec2sse(const Vec2sse &V);
-	~Vec2sse();
-
-	Vec2sse operator - (const Vec2sse &V)const;
-	Vec2sse operator+(const Vec2sse &V)const;
-	Vec2sse operator*(const Vec2sse &V)const;
-	Vec2sse operator*(const float &S)const;
-	Vec2sse operator/(const float &S)const;
-	Vec2sse &operator-=(const Vec2sse &V);
-	Vec2sse &operator+=(const Vec2sse &V);
-
-	Vec2sse LenSqr()const;
-	Vec2sse InvLength()const;
-	Vec2sse Length()const;
-	Vec2sse Normalize()const;
-
-	__m128 v;
-};
