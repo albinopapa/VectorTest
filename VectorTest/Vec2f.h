@@ -17,7 +17,9 @@ public:
 	Vec2f &operator-=(const Vec2f &V);
 	Vec2f &operator+=(const Vec2f &V);
 
+	float Dot(const Vec2f &V)const;
 	float Length()const;
+	float LengthSquared()const;
 	Vec2f Normalize()const;
 
 	float x, y;

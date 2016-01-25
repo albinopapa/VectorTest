@@ -18,7 +18,7 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 	srand((UINT)time(NULL));
 	LoadFont(&fixedSys, "Fonts\\Fixedsys16x28.bmp", 16, 28, 32);
 
-	//enum Feature_Ecx
+	//enum Intel_Feature_Ecx
 	//{
 	//	// ECX register
 	//	SSE3 = 0x00000001,
@@ -53,7 +53,8 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 	//	rdrnd = 1 << 30,
 	//	hypervisor = 1 << 31
 	//};
-	//enum Feature_Edx
+
+	//enum Intel_Feature_Edx
 	//{
 	//	// EDX register
 	//	fpu = 1,
@@ -102,33 +103,83 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 	//Reg temp;
 	//__cpuid(temp.iReg, 1);
 
-	//Feature_Ecx ecx; 
-	//Feature_Edx edx;
+	//Intel_Feature_Ecx ecx; 
+	//Intel_Feature_Edx edx;
 
-	//ecx = (Feature_Ecx)temp.ecx;
-	//edx = (Feature_Edx)temp.edx;
+	//ecx = (Intel_Feature_Ecx)temp.ecx;
+	//edx = (Intel_Feature_Edx)temp.edx;
 
 	//pSurf = AlignedPtr<D3DCOLOR>(64);
+	CreateSurface();
+	InitBalls();
+
+	Vec4SSE a(1.0f, 0.0f, 0.0f, 1.0f);
+	Vec4SSE b(0.0f, 1.0f, 0.0f, 1.0f);
+	Vec4SSE c = a.Cross(b);
+
+	int ia = 0;
+}
+
+Game::~Game()
+{
+}
+
+void Game::Go()
+{
+	gfx->BeginFrame();
+	UpdateTime();
+	UpdateFrameSSE();
+	ComposeFrame();
+	gfx->EndFrame();
+}
+
+void Game::InitBalls()
+{
 	numBalls = 2000;
-	pos = new Vector2[numBalls];
-	vel = new Vector2[numBalls];
-	acc = new Vector2[numBalls];
+	pos.reset(new Vector2[numBalls]);
+	vel.reset(new Vector2[numBalls]);
+	acc.reset(new Vector2[numBalls]);
+
+	vPos.reset(new Vec2f[numBalls]);
+	vVel.reset(new Vec2f[numBalls]);
+	vAcc.reset(new Vec2f[numBalls]);
 
 	std::default_random_engine rnd;
 
 	for (int i = 0; i < numBalls; ++i)
 	{
-		std::uniform_real_distribution<float> xRand(0.0f, (float)win->Width());
-		std::uniform_real_distribution<float> yRand(0.0f, (float)win->Height());
-
-		pos[i].x = xRand(rnd);
-		pos[i].y = yRand(rnd);
-		vel[i].x = vel[i].y = 0.0f;
+		std::uniform_real_distribution<float> xRand(0.0f, 200.0f);
+		std::uniform_real_distribution<float> yRand(0.0f, 200.0f);
+		float theta = (float)i / 180.0f * 3.14159f;
+		float rx = xRand(rnd) * cos(theta);
+		float ry = yRand(rnd) * sin(theta);
+		float x = win->Width() / 6;
+		float y = win->Height() / 2;
+		if (i % 2 == 0)
+		{
+			pos[i].x = x + rx;
+			pos[i].y = y + ry;
+			vel[i].x = 2.0f * cos(theta);
+			vel[i].y = 2.0f * sin(theta);
+		}
+		else
+		{
+			pos[i].x = (x * 5.0f) + rx;
+			pos[i].y = y + ry;
+			vel[i].x = -2.0f * cos(theta);
+			vel[i].y = -2.0f * sin(theta);
+		}
 		acc[i].x = acc[i].y = 0.0f;
+
+		vPos[i] = Vec2f(yRand(rnd) + (win->Width() / 2), yRand(rnd) + (win->Height() / 2));
+		vVel[i] = vAcc[i] = Vec2f();
 	}
+
 	g = 1.0f;
-	
-	// Create surface
+}
+
+void Game::CreateSurface()
+{
 	radius = 8;
 	int diam = radius * 2;
 	float invRad = 1.0f / (float)radius;
@@ -158,25 +209,31 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 			pSurf[index] = c;
 		}
 	}
-	// Done creating surface
-
-
-}
-
-Game::~Game()
-{
-}
-
-void Game::Go()
-{	
-	gfx->BeginFrame();
-	UpdateTime();
-	UpdateFrame();
-	ComposeFrame();
-	gfx->EndFrame();
 }
 
 void Game::UpdateFrame()
+{
+	for (int i = 0; i < numBalls; ++i)
+	{		
+		for (int j = i + 1; j < numBalls; ++j)
+		{			
+			Vec2f delta(vPos[j] - vPos[i]);
+			float deltaSqr(delta.LengthSquared());
+			Vec2f normal(delta.Normalize());
+			float force(min((g / deltaSqr), 0.06f));
+			Vec2f accel(normal * force);
+
+			vAcc[i] += accel;
+			vAcc[j] -= accel;
+		}
+
+		vVel[i] += vAcc[i];
+		vPos[i] += vVel[i];
+		vAcc[i] = Vec2f();
+	}
+}
+
+void Game::UpdateFrameSSE()
 {	
 	Vec2SSE z(ZeroPS);
 
@@ -194,7 +251,8 @@ void Game::UpdateFrame()
 
 			Vec2SSE delta(pj - pi);
 			Vec2SSE deltaSqr(delta.LengthSquare());
-			Vec2SSE normal(delta.Normalize());
+			Vec2SSE dist(SSE_Utils::Float4_Utils::RecipSqrRoot(deltaSqr.v));
+			Vec2SSE normal(delta * dist);
 			Vec2SSE force(SSE_Utils::Float4_Utils::Min((g / deltaSqr).v, Vec2SSE(0.06f).v));
 			Vec2SSE accel(normal * force);
 
@@ -245,7 +303,20 @@ void Game::ComposeFrame()
 		{
 			continue;
 		}
-		gfx->DrawSurfaceAlpha(px, py, diam, diam, pSurf);
-		//gfx->DrawSurface(px, py, diam, diam, D3DCOLOR_ARGB(0, 255, 255, 255), pSurf);
+		gfx->DrawSurfaceAlpha(px, py, diam, diam, pSurf);		
 	}
+
+	/*for (int i = 0; i < numBalls; ++i)
+	{
+	int px = (int)vPos[i].x + 0.5f;
+	int py = (int)vPos[i].y + 0.5f;
+
+	if (px < 0 || px + diam >= win->Width() ||
+	py < 0 || py + diam >= win->Height())
+	{
+	continue;
+	}
+	gfx->DrawSurfaceAlpha(px, py, diam, diam, pSurf);
+	}*/
+
 }

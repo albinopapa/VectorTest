@@ -11,9 +11,12 @@
 #include "Vec2f.h"
 #include "Vector.h"
 #include "Vec2SSE.h"
+#include "Vec3SSE.h"
+#include "Vec4SSE.h"
+
 // WIP
 #include "AlignedPtr.h"
-
+#include "CpuID.h"
 
 
 class Game
@@ -24,8 +27,11 @@ public:
 	void Go();
 
 private:
+	void InitBalls();
+	void CreateSurface();
 	void UpdateTime();
 	void ComposeFrame();
+	void UpdateFrameSSE();
 	void UpdateFrame();
 
 private:
@@ -44,7 +50,13 @@ private:
 
 	float g;
 	int numBalls;
-	Vector2 *pos;
-	Vector2 *vel;
-	Vector2 *acc;
+	std::unique_ptr<Vector2[]> pos;
+	std::unique_ptr<Vector2[]> vel;
+	std::unique_ptr<Vector2[]> acc;
+
+	std::unique_ptr<Vec2f[]> vPos;
+	std::unique_ptr<Vec2f[]> vVel;
+	std::unique_ptr<Vec2f[]> vAcc;
+
+	CpuID cpuid;
 };

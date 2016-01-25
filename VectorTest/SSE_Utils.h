@@ -117,7 +117,6 @@ enum ShuffleOrder
 #define xyMask		0xFFFFFFFF, 0xFFFFFFFF, 0x0, 0x0
 #define xyzMask		0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x0
 
-#define LoadFloat(X) _mm_set1_ps((X))
 #define SetFloat4(f0, f1, f2, f3) (_mm_set_ps(f3, f2, f1, f0))
 
 #define ZeroPS _mm_setzero_ps()
@@ -224,7 +223,7 @@ enum Shuffle_Words_or_DWords
 
 
 // Used for store operations
-Align16
+
 union Vector2
 {
 	struct
@@ -240,7 +239,7 @@ union Vector2
 		UINT ix, iy;
 	};
 };
-Align16
+
 union Vector3
 {
 	struct
@@ -256,7 +255,8 @@ union Vector3
 		UINT ix, iy, iz;
 	};
 };
-Align16
+
+Align16 
 union Vector4
 {
 	struct
@@ -283,6 +283,27 @@ namespace SSE_Utils
 {
 	namespace Float4_Utils
 	{
+		// Load operations
+		// To load Vector2/3/4 use the SSE vector classes		
+		// Loads A into X position, sets the rest to 0.0f
+		inline FLOAT4 _vectorcall LoadFloat(const float A)
+		{
+			return _mm_set_ss(A);
+		}
+		inline FLOAT4 _vectorcall LoadFloat2(const float A, const float B)
+		{
+			return _mm_set_ps(0.0f, 0.0f, B, A);
+		}
+		inline FLOAT4 _vectorcall LoadFloat3(const float A, const float B, const float C)
+		{
+			return _mm_set_ps(0.0f, C, B, A);
+		}
+		inline FLOAT4 _vectorcall LoadFloat4(const float A, const float B, const float C, const float D)
+		{
+			return _mm_set_ps(D, C, B, A);
+		}
+		
+
 		// Logical operators
 		inline FLOAT4 _vectorcall operator&(const FLOAT4 &A, const FLOAT4 &B)
 		{
@@ -409,7 +430,18 @@ namespace SSE_Utils
 		{
 			return Max(ZeroPS - A, A);
 		}
-
+		inline FLOAT4 _vectorcall RecipSqrRoot(const FLOAT4 &A)
+		{
+			return _mm_rsqrt_ps(A);
+		}
+		inline FLOAT4 _vectorcall SqrRoot(const FLOAT4 &A)
+		{
+			return _mm_sqrt_ps(A);
+		}
+		inline FLOAT4 _vectorcall Recip(const FLOAT4 &A)
+		{
+			return _mm_rcp_ps(A);
+		}
 #pragma region Shuffling
 		// Shuffle overloads
 		template<const unsigned int A, const unsigned int B,

@@ -70,5 +70,5 @@ public:
 
 inline Vec2SSE _vectorcall operator/(const float S, const Vec2SSE &V)
 {
-	return{ _mm_div_ps(LoadFloat(S), V.v) };
+	return{ _mm_div_ps(SSE_Utils::Float4_Utils::LoadFloat(S), V.v) };
 }

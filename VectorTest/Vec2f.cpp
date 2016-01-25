@@ -56,9 +56,19 @@ Vec2f &Vec2f::operator+=(const Vec2f &V)
 	return (*this);
 }
 
+float Vec2f::Dot(const Vec2f &V)const
+{
+	return((x * x) + (y * y));
+}
+
+float Vec2f::LengthSquared()const
+{
+	return Dot(*this);
+}
+
 float Vec2f::Length()const
 {
-	return sqrtf((*this) * (*this));
+	return sqrtf(LengthSquared());
 }
 
 Vec2f Vec2f::Normalize()const

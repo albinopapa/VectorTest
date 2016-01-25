@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClInclude Include="AlignedPtr.h" />
     <ClInclude Include="Bitmap.h" />
+    <ClInclude Include="CpuID.h" />
     <ClInclude Include="D3DGraphics.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Keyboard.h" />
@@ -157,6 +158,8 @@
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Vec2f.h" />
     <ClInclude Include="Vec2SSE.h" />
+    <ClInclude Include="Vec3SSE.h" />
+    <ClInclude Include="Vec4SSE.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
@@ -170,6 +173,8 @@
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Vec2f.cpp" />
     <ClCompile Include="Vec2sse.cpp" />
+    <ClCompile Include="Vec3SSE.cpp" />
+    <ClCompile Include="Vec4SSE.cpp" />
     <ClCompile Include="Vector.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
