@@ -19,6 +19,7 @@ public:
 	Vec2SSE(float X, float Y);
 	Vec2SSE(const FLOAT4 &V);
 	Vec2SSE(const Vector2 &V);
+	Vec2SSE(const Vec2SSE &V);
 
 	// Logical operators
 	Vec2SSE _vectorcall operator&(const Vec2SSE &V)const;
@@ -47,7 +48,9 @@ public:
 	Vec2SSE _vectorcall MultiplyAdd(const Vec2SSE &V0, const Vec2SSE &V1);
 	Vec2SSE _vectorcall Dot(const Vec2SSE &V)const;
 	Vec2SSE _vectorcall Cross(const Vec2SSE &V)const;
-	Vec2SSE _vectorcall InverseLength();
+	Vec2SSE _vectorcall Length()const;
+	Vec2SSE _vectorcall LengthSquare()const;
+	Vec2SSE _vectorcall InverseLength()const;
 	Vec2SSE Normalize();
 
 	Vec2SSE SplatX()const;
@@ -63,3 +66,9 @@ public:
 
 	FLOAT4 v;
 };
+
+
+inline Vec2SSE _vectorcall operator/(const float S, const Vec2SSE &V)
+{
+	return{ _mm_div_ps(LoadFloat(S), V.v) };
+}

@@ -136,8 +136,8 @@ void D3DGraphics::DrawSurfaceAlpha(int X, int Y, int Width, int Height, const D3
 			PDQWORD mSurfPixel = (PDQWORD)(&Surface[surfaceIndex]);
 			PDQWORD mBackPixel = (PDQWORD)(&(pSysBuffer.get()[backBufferIndex]));
 
-			DQWORD mSrcColor = *mSurfPixel;
-			DQWORD mDstColor = *mBackPixel;
+			DQWORD mSrcColor = LoadU_32(mSurfPixel);
+			DQWORD mDstColor = LoadU_32(mBackPixel);
 
 			// Unpack source pixels
 			SSE srcLo(SSE(mSrcColor).UnpackLoBytes());
@@ -175,7 +175,7 @@ void D3DGraphics::DrawSurfaceAlpha(int X, int Y, int Width, int Height, const D3
 
 			// Pack pixels and store
 			SSE r(rLo.PackUnsignedSaturateWords(rHi));
-			_mm_storeu_si128(mBackPixel, r.A);
+			StoreU_32(mBackPixel, r.A);
 		}
 	}
 }

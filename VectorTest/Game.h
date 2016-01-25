@@ -42,8 +42,9 @@ private:
 	int radius;
 	D3DCOLOR* pSurf;
 
+	float g;
 	int numBalls;
-	Vec2f *pos;
-	Vec2f *vel;
-	Vec2f *acc;
+	Vector2 *pos;
+	Vector2 *vel;
+	Vector2 *acc;
 };

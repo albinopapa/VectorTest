@@ -110,9 +110,9 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 
 	//pSurf = AlignedPtr<D3DCOLOR>(64);
 	numBalls = 2000;
-	pos = new Vec2f[numBalls];
-	vel = new Vec2f[numBalls];
-	acc = new Vec2f[numBalls];
+	pos = new Vector2[numBalls];
+	vel = new Vector2[numBalls];
+	acc = new Vector2[numBalls];
 
 	std::default_random_engine rnd;
 
@@ -121,12 +121,13 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 		std::uniform_real_distribution<float> xRand(0.0f, (float)win->Width());
 		std::uniform_real_distribution<float> yRand(0.0f, (float)win->Height());
 
-		pos[i] = Vec2f(xRand(rnd), yRand(rnd));
-		vel[i] = Vec2f();
-		acc[i] = Vec2f();
+		pos[i].x = xRand(rnd);
+		pos[i].y = yRand(rnd);
+		vel[i].x = vel[i].y = 0.0f;
+		acc[i].x = acc[i].y = 0.0f;
 	}
-
-
+	g = 1.0f;
+	
 	// Create surface
 	radius = 8;
 	int diam = radius * 2;
@@ -144,14 +145,14 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 			index = x + (y * diam);
 
 			UINT alpha = 0;
-			D3DCOLOR c = D3DCOLOR_ARGB(alpha, 255, 255, 255);
+			D3DCOLOR c = D3DCOLOR_ARGB(alpha, 255, alpha, 0);
 
 			if (sqrDist <= radius * radius)
 			{
 				float dist = sqrtf((float)sqrDist);
 				UINT iDist = (UINT)((dist * invRad * 255.0f) + 0.5f);
 				alpha = 255 - iDist;
-				c = D3DCOLOR_ARGB(alpha, 255, 255, 255);
+				c = D3DCOLOR_ARGB(alpha, 0, alpha, 255);
 			}
 
 			pSurf[index] = c;
@@ -159,11 +160,6 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 	}
 	// Done creating surface
 
-	Vec2SSE a(1.0f, 2.0f), b(3.0f);
-	Vec2SSE c(5.0f, 10.0f);
-
-	c.v = MirrorXY(c.v);
-	int at = 0;
 
 }
 
@@ -175,43 +171,44 @@ void Game::Go()
 {	
 	gfx->BeginFrame();
 	UpdateTime();
+	UpdateFrame();
 	ComposeFrame();
 	gfx->EndFrame();
 }
 
 void Game::UpdateFrame()
-{
-	for (int i = 0; i < numBalls; i += 2)
+{	
+	Vec2SSE z(ZeroPS);
+
+	for (int i = 0; i < numBalls; ++i)
 	{
-		Vector pi(pos[i].x, pos[i].y, pos[i + 1].x, pos[i + 1].y);
-		Vector vi(vel[i].x, vel[i].y, vel[i + 1].x, vel[i + 1].y);
-		Vector ai(acc[i].x, acc[i].y, acc[i + 1].x, acc[i + 1].y);
-		Vec2f temp[2];
+		Vec2SSE pi(pos[i]);
+		Vec2SSE vi(vel[i]);
+		Vec2SSE ai(acc[i]);
 
-		for (int j = i + 1; j < numBalls - 1; j += 2)
+		for (int j = i + 1; j < numBalls; ++j)
 		{
-			Vector pj(pos[j].x, pos[j].y, pos[j + 1].x, pos[j + 1].y);
-			Vector vj(vel[j].x, vel[j].y, vel[j + 1].x, vel[j + 1].y);
-			Vector aj(acc[j].x, acc[j].y, acc[j + 1].x, acc[j + 1].y);
+			Vec2SSE pj(pos[j]);
+			Vec2SSE vj(vel[j]);
+			Vec2SSE aj(acc[j]);
 
-			Vector delta(pj - pi);
-			Vector deltaSqr(delta.MultiDot2(delta));
-			Vector normal(delta.MultiNormalize2());
-			Vector force((Vector(5.0f) / deltaSqr).Min(Vector(0.06f)));
-			Vector accel(normal * force);
+			Vec2SSE delta(pj - pi);
+			Vec2SSE deltaSqr(delta.LengthSquare());
+			Vec2SSE normal(delta.Normalize());
+			Vec2SSE force(SSE_Utils::Float4_Utils::Min((g / deltaSqr).v, Vec2SSE(0.06f).v));
+			Vec2SSE accel(normal * force);
 
 			ai += accel;
 			aj -= accel;
-			_mm_storeu_ps((float*)temp, aj.vector);
-			acc[j] = temp[0];
-			acc[j + 1] = temp[1];
+			acc[j] = aj.StoreFloat();
 		}
 
-		_mm_storeu_ps((float*)temp, ai.vector);
+		vi += ai;
+		pi += vi;
 
-		acc[i] = temp[0];
-		acc[i + 1] = temp[1];
-
+		vel[i] = vi.StoreFloat();
+		pos[i] = pi.StoreFloat();		
+		acc[i] = z.StoreFloat();
 	}
 }
 
@@ -243,6 +240,12 @@ void Game::ComposeFrame()
 		int px = (int)pos[i].x + 0.5f;
 		int py = (int)pos[i].y + 0.5f;
 
+		if (px < 0 || px + diam >= win->Width() ||
+			py < 0 || py + diam >= win->Height())
+		{
+			continue;
+		}
 		gfx->DrawSurfaceAlpha(px, py, diam, diam, pSurf);
+		//gfx->DrawSurface(px, py, diam, diam, D3DCOLOR_ARGB(0, 255, 255, 255), pSurf);
 	}
 }

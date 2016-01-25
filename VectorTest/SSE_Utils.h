@@ -556,7 +556,8 @@ namespace SSE_Utils
 		}
 #pragma endregion
 	}
-	// Matrix operations
+
+	// TODO: Matrix operations
 	/*inline void _vectorcall Transpose(const Matrix &M, Matrix &Out)
 	{
 		FLOAT4 t0, t1;
@@ -573,8 +574,9 @@ namespace SSE_Utils
 
 		int a = 0;
 	}*/
-	inline Matrix _vectorcall operator+(const Matrix &M0, const Matrix &M1)
+	/*inline Matrix _vectorcall operator+(const Matrix &M0, const Matrix &M1)
 	{
+		using namespace Float4_Utils;
 		Matrix res;
 		for (int i = 0; i < 4; ++i)
 		{
@@ -585,6 +587,7 @@ namespace SSE_Utils
 	}
 	inline Matrix _vectorcall operator-(const Matrix &M0, const Matrix &M1)
 	{
+		using namespace Float4_Utils;
 		Matrix res;
 		for (int i = 0; i < 4; ++i)
 		{
@@ -592,7 +595,7 @@ namespace SSE_Utils
 		}
 
 		return res;
-	}
+	}*/
 	/*inline FLOAT4 _vectorcall operator*(const FLOAT4 &V, const Matrix &M)
 	{		
 		Matrix tm;

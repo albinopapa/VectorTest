@@ -1,9 +1,12 @@
 #include "Vec2SSE.h"
 #include <DirectXMath.h>
 
-using namespace SSE_Utils;
+using namespace SSE_Utils::Float4_Utils;
 
-Vec2SSE::Vec2SSE(){};
+Vec2SSE::Vec2SSE()
+	:
+	v(ZeroPS)
+{};
 Vec2SSE::Vec2SSE(float S)
 	:
 	v(_mm_set1_ps(S))	// Set all elements to S (S, S, S, S)
@@ -23,8 +26,11 @@ Vec2SSE::Vec2SSE(const Vector2 &V)
 	:
 	v(_mm_set_ps(0.0f, 0.0f, V.y, V.x))
 {}
+Vec2SSE::Vec2SSE(const Vec2SSE &V)
+	:
+	v(V.v)
+{}
 
-// Logical operators
 Vec2SSE Vec2SSE::operator&(const Vec2SSE &V)const
 {
 	return{ v & V.v };
@@ -34,14 +40,11 @@ Vec2SSE Vec2SSE::operator|(const Vec2SSE &V)const
 	return v | V.v;
 }
 
-// Logical function
-// same as C = (!A) & B;
 Vec2SSE Vec2SSE::AndNot(const Vec2SSE &V)
 {
-	return{ SSE_Utils::AndNot(v, V.v) };
+	return{ SSE_Utils::Float4_Utils::AndNot(v, V.v) };
 }
 
-// Arithmetic operators
 Vec2SSE Vec2SSE::operator-()const
 {
 	return{ -v };
@@ -119,9 +122,19 @@ Vec2SSE Vec2SSE::Cross(const Vec2SSE &V)const
 	return t0;
 }
 
-Vec2SSE Vec2SSE::InverseLength()
+Vec2SSE Vec2SSE::Length()const
 {
-	return{ _mm_rsqrt_ps(Dot(*this).v) };
+	return{ _mm_sqrt_ps(Dot(*this).v) };
+}
+
+Vec2SSE Vec2SSE::LengthSquare()const
+{
+	return Dot(*this);
+}
+
+Vec2SSE Vec2SSE::InverseLength()const
+{
+	return{ _mm_rsqrt_ps(LengthSquare().v) };
 }
 
 Vec2SSE Vec2SSE::Normalize()
