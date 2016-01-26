@@ -66,12 +66,19 @@ public:
 	void SetFeatures()
 	{
 		int code[4]{};
-		__cpuid(code, brand + 1);
+		__cpuid(code, 1);
 
 		eax = code[0];
 		ebx = code[1];
 		ecx = code[2];
 		edx = code[3];
+
+		__cpuid(code, brand + 1);
+		xEax = code[0];
+		xEbx = code[1];
+		xEcx = code[2];
+		xEdx = code[3];
+
 	}
 	bool SupportsSSE()
 	{
@@ -92,8 +99,9 @@ public:
 	}
 	bool SupportsSSE4a()
 	{
+
 		bool isAmd = brand == Amd;
-		return (isAmd && ((ecx & SSE4a) >> 6));
+		return (isAmd && ((xEcx & SSE4a) >> 6));
 	}
 	bool SupportsSSE41()
 	{
@@ -105,13 +113,13 @@ public:
 	}
 	bool SupportsFMA3()
 	{
-		int t = (ecx & FMA3);
+		int t = (xEcx & FMA3);
 		return t >> 12;
 	}
 	bool SupportsFMA4()
 	{
 		bool isAmd = brand == Amd;
-		return (isAmd && ((ecx & FMA4) >> 16));
+		return (isAmd && ((xEcx & FMA4) >> 16));
 	}
 	bool SupportsAVX()
 	{
@@ -122,7 +130,7 @@ private:
 	std::string brandString;
 	Brand brand;
 
-	int eax, ebx, ecx, edx;
+	int eax, ebx, ecx, edx, xEax, xEbx, xEcx, xEdx;
 
 };
 

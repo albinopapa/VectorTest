@@ -171,15 +171,15 @@ void Game::InitBalls()
 		{
 			pos[i].x = x + rx;
 			pos[i].y = y + ry;
-			vel[i].x = 2.0f * cos(theta);
-			vel[i].y = 2.0f * sin(theta);
+			vel[i].x = 1.0f * cos(theta);
+			vel[i].y = 1.0f * sin(theta);
 		}
 		else
 		{
 			pos[i].x = (x * 5.0f) + rx;
 			pos[i].y = y + ry;
-			vel[i].x = -2.0f * cos(theta);
-			vel[i].y = -2.0f * sin(theta);
+			vel[i].x = -1.0f * cos(theta);
+			vel[i].y = -1.0f * sin(theta);
 		}
 		acc[i].x = acc[i].y = 0.0f;
 

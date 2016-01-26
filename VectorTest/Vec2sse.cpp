@@ -99,12 +99,15 @@ Vec2SSE Vec2SSE::MultiplyAdd(const Vec2SSE &V0, const Vec2SSE &V1)
 {
 	return V1.v + (v * V0.v);
 }
+
+#include <ammintrin.h>
 Vec2SSE Vec2SSE::Dot(const Vec2SSE &V)const
 {
 	FLOAT4 t0 = v * V.v;
 	FLOAT4 t1 = _mm_shuffle_ps(t0, ZeroPS, _MM_SHUFFLE(0, 0, 0, 1));
 	t0 += t1;
-
+	
+	
 	return t0;
 }
 
