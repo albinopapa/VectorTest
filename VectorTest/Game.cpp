@@ -6,6 +6,7 @@
 #include <random>
 
 typedef __m128 Float4;
+using namespace SSE_Utils::Float4_Utils;
 
 Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServer,
 	std::shared_ptr<MouseServer> &mServ)
@@ -248,6 +249,8 @@ void Game::UpdateFrame()
 void Game::UpdateFrameSSE()
 {	
 	Vec2SSE z(ZeroPS);
+	Vec2SSE vMin(0.06f);
+	Vec2SSE vGrav(g);
 
 	for (int i = 0; i < numBalls; ++i)
 	{
@@ -261,11 +264,12 @@ void Game::UpdateFrameSSE()
 			Vec2SSE vj(vel[j]);
 			Vec2SSE aj(acc[j]);
 
-			Vec2SSE delta(pj - pi);
-			Vec2SSE deltaSqr(delta.LengthSquare());
-			Vec2SSE dist(SSE_Utils::Float4_Utils::RecipSqrRoot(deltaSqr.v));
-			Vec2SSE normal(delta * dist);
-			Vec2SSE force(SSE_Utils::Float4_Utils::Min((g / deltaSqr).v, Vec2SSE(0.06f).v));
+			Vec2SSE delta = pj - pi;
+			Vec2SSE deltaSqr = delta.LengthSquare();
+			Vec2SSE dist = RecipSqrRoot(deltaSqr.v);
+			Vec2SSE normal = delta * dist;
+			Vec2SSE invSqrDist = Recip(deltaSqr.v);
+			Vec2SSE force = Min(invSqrDist.v * vGrav.v, vMin.v);
 			Vec2SSE accel(normal * force);
 
 			ai += accel;
