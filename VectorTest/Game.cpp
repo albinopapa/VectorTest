@@ -117,6 +117,18 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 	Vec4SSE b(0.0f, 1.0f, 0.0f, 1.0f);
 	Vec4SSE c = a.Cross(b);
 
+	bool bSSE = cpuid.SupportsSSE();
+	bool bSSE2 = cpuid.SupportsSSE2();
+	bool bSSE3 = cpuid.SupportsSSE3();
+	bool bSSSE3 = cpuid.SupposrtsSSSE3();
+	bool bSSE4a = cpuid.SupportsSSE4a();
+	bool bSSE41 = cpuid.SupportsSSE41();
+	bool bSSE42 = cpuid.SupportsSSE42();
+	bool bFMA3 = cpuid.SupportsFMA3();
+	bool bFMA4 = cpuid.SupportsFMA4();
+	bool bAVX = cpuid.SupportsAVX();
+
+
 	int ia = 0;
 }
 

@@ -17,7 +17,7 @@ enum Common_ecx
 };
 enum Common_edx
 {
-	SSE = 1 << 25,
+	SSE1 = 1 << 25,
 	SSE2 = 1 << 26,
 };
 enum AmdEx_ecx
@@ -36,6 +36,7 @@ public:
 	CpuID()
 	{
 		SetBrand();
+		SetFeatures();
 	}
 
 	~CpuID()
@@ -65,15 +66,62 @@ public:
 	void SetFeatures()
 	{
 		int code[4]{};
-		__cpuid(code, 1);
+		__cpuid(code, brand + 1);
 
 		eax = code[0];
 		ebx = code[1];
 		ecx = code[2];
 		edx = code[3];
 	}
+	bool SupportsSSE()
+	{
+		int t = (edx & SSE1);
+		return t >> 25;
+	}
+	bool SupportsSSE2()
+	{
+		return (edx & SSE2) >> 26;
+	}
+	bool SupportsSSE3()
+	{
+		return (ecx & SSE3);
+	}
+	bool SupposrtsSSSE3()
+	{
+		return (ecx & SSSE3) >> 9;
+	}
+	bool SupportsSSE4a()
+	{
+		bool isAmd = brand == Amd;
+		return (isAmd && ((ecx & SSE4a) >> 6));
+	}
+	bool SupportsSSE41()
+	{
+		return (ecx & SSE4_1) >> 19;
+	}
+	bool SupportsSSE42()
+	{
+		return (ecx & SSE4_2) >> 20;
+	}
+	bool SupportsFMA3()
+	{
+		int t = (ecx & FMA3);
+		return t >> 12;
+	}
+	bool SupportsFMA4()
+	{
+		bool isAmd = brand == Amd;
+		return (isAmd && ((ecx & FMA4) >> 16));
+	}
+	bool SupportsAVX()
+	{
+		return (ecx & AVX) >> 28;
+	}
+	
+private:
 	std::string brandString;
 	Brand brand;
+
 	int eax, ebx, ecx, edx;
 
 };
