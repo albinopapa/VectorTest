@@ -93,7 +93,7 @@ Vec4SSE & Vec4SSE::operator/=(const Vec4SSE &V)
 	return (*this);
 }
 
-Vec4SSE Vec4SSE::MultiplyAdd(const Vec4SSE &V0, const Vec4SSE &V1)
+Vec4SSE Vec4SSE::MultiplyAdd(const Vec4SSE &V0, const Vec4SSE &V1)const
 {
 	return V1.v + (v * V0.v);
 }

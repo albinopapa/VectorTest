@@ -13,10 +13,12 @@
 #include "Vec2SSE.h"
 #include "Vec3SSE.h"
 #include "Vec4SSE.h"
+#include "Matrix4x4SSE.h"
+#include "CpuID.h"
 
+#include "Ball.h"
 // WIP
 #include "AlignedPtr.h"
-#include "CpuID.h"
 
 
 class Game
@@ -32,7 +34,6 @@ private:
 	void UpdateTime();
 	void ComposeFrame();
 	void UpdateFrameSSE();
-	void UpdateFrame();
 
 private:
 	std::shared_ptr<D3DGraphics> gfx;// DirectX Framework Variable
@@ -50,13 +51,10 @@ private:
 
 	float g;
 	int numBalls;
+	std::unique_ptr<Ball[]> ball;
 	std::unique_ptr<Vector2[]> pos;
 	std::unique_ptr<Vector2[]> vel;
 	std::unique_ptr<Vector2[]> acc;
 
-	std::unique_ptr<Vec2f[]> vPos;
-	std::unique_ptr<Vec2f[]> vVel;
-	std::unique_ptr<Vec2f[]> vAcc;
-
-	CpuID cpuid;
+	InstructionSet cpuid;
 };

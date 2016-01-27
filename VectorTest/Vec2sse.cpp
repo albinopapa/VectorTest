@@ -12,7 +12,7 @@ Vec2SSE::Vec2SSE(float S)
 	v(_mm_set1_ps(S))	// Set all elements to S (S, S, S, S)
 {
 	// Zero out the last two elements as they won't be used (v, v, 0.0f, 0.0f)
-	v = _mm_shuffle_ps(v, _mm_setzero_ps(), _MM_SHUFFLE(0, 0, 2, 1));
+	v = _mm_shuffle_ps(v, _mm_setzero_ps(), _MM_SHUFFLE(0, 0, 1, 0));
 }
 Vec2SSE::Vec2SSE(float X, float Y)
 	:
@@ -100,15 +100,11 @@ Vec2SSE Vec2SSE::MultiplyAdd(const Vec2SSE &V0, const Vec2SSE &V1)
 	return V1.v + (v * V0.v);
 }
 
-#include <ammintrin.h>
 Vec2SSE Vec2SSE::Dot(const Vec2SSE &V)const
 {
 	FLOAT4 t0 = v * V.v;
-	/*t0 = _mm_hadd_ps(t0, t0);
-	t0 = Shuffle<Axz | Byw>(t0);*/
 	FLOAT4 t1 = _mm_shuffle_ps(t0, ZeroPS, _MM_SHUFFLE(0, 0, 0, 1));
 	t0 += t1;
-	
 	
 	return t0;
 }

@@ -144,11 +144,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AlignedPtr.h" />
+    <ClInclude Include="Ball.h" />
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="CpuID.h" />
     <ClInclude Include="D3DGraphics.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Keyboard.h" />
+    <ClInclude Include="Matrix4x4SSE.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SSE.h" />
@@ -164,11 +166,13 @@
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Ball.cpp" />
     <ClCompile Include="Bitmap.cpp" />
     <ClCompile Include="Cpuid.cpp" />
     <ClCompile Include="D3DGraphics.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Keyboard.cpp" />
+    <ClCompile Include="Matrix4x4SSE.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="System.cpp" />
     <ClCompile Include="Timer.cpp" />

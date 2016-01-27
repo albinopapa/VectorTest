@@ -35,7 +35,7 @@ public:
 	Vec4SSE & _vectorcall operator/=(const Vec4SSE &V);
 
 	// return V1 + ((*this) * V0);
-	Vec4SSE _vectorcall MultiplyAdd(const Vec4SSE &V0, const Vec4SSE &V1);
+	Vec4SSE _vectorcall MultiplyAdd(const Vec4SSE &V0, const Vec4SSE &V1)const;
 	Vec4SSE _vectorcall Dot(const Vec4SSE &V)const;
 	Vec4SSE _vectorcall Cross(const Vec4SSE &V)const;
 	Vec4SSE _vectorcall Length()const;
