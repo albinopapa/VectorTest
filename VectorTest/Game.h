@@ -8,17 +8,12 @@
 #include "Mouse.h"
 #include "Window.h"
 #include "Timer.h"
-#include "Vec2f.h"
-#include "Vector.h"
-#include "Vec2SSE.h"
-#include "Vec3SSE.h"
-#include "Vec4SSE.h"
-#include "Matrix4x4SSE.h"
 #include "CpuID.h"
-
+#include "SSEMath.h"
 #include "Ball.h"
 // WIP
 #include "AlignedPtr.h"
+#include "Skeleton.h"
 
 
 class Game
@@ -52,9 +47,6 @@ private:
 	float g;
 	int numBalls;
 	std::unique_ptr<Ball[]> ball;
-	std::unique_ptr<Vector2[]> pos;
-	std::unique_ptr<Vector2[]> vel;
-	std::unique_ptr<Vector2[]> acc;
-
 	InstructionSet cpuid;
+	Skeleton skelly;
 };

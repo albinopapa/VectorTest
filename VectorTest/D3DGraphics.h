@@ -35,15 +35,18 @@ class D3DGraphics
 public:
 	D3DGraphics(std::shared_ptr<Window> &rWin);
 	~D3DGraphics();
-	void PutPixel(int x, int y, int r, int g, int b);
-	void PutPixel(int x, int y, D3DCOLOR c);
 	void BeginFrame();
 	void EndFrame();
+
+	void PutPixel(int x, int y, int r, int g, int b);
+	void PutPixel(int x, int y, D3DCOLOR c);
+
+	void DrawLine(int X0, int Y0, int X1, int Y1, D3DCOLOR C);
 	void DrawChar(char c, int x, int y, Font& font, D3DCOLOR color);
 	void DrawString(const std::string &Text, int X, int Y, Font &font, D3DCOLOR Color);
 	void DrawSurface(int x, int y, int width, int height, D3DCOLOR key, const D3DCOLOR* surf);
 	void DrawSurfaceAlpha(int X, int Y, int Width, int Height, const D3DCOLOR * Surface);
-
+	void DrawSurfaceAlphaUtil(int X, int Y, int Width, int Height, const D3DCOLOR * Surface);
 
 private:
 	Microsoft::WRL::ComPtr<IDirect3D9>			pDirect3D;

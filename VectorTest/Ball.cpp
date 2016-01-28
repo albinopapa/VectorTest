@@ -25,7 +25,7 @@ Ball::Ball(std::default_random_engine &Rnd, int Index, std::shared_ptr<Window> &
 	float x = win->Width() / 6;
 	float y = win->Height() / 2;
 
-	float initVel = 0.60f;
+	float initVel = 0.250f;
 	if (myIndex % 2 == 0)
 	{
 		pos = { x + rx, y + ry };
@@ -43,9 +43,8 @@ void Ball::Update(Ball *BallJ, UINT NumBalls, float dt)
 {
 	Vec2SSE z(ZeroPS);
 	Vec2SSE vMin(0.06f);
-	Vec2SSE vGrav(g);
 
-
+	Vec2SSE vDt((dt) * g);
 	for (int j = myIndex + 1; j < NumBalls; ++j)
 	{
 		Vec2SSE delta = BallJ[j].pos - pos;
@@ -53,7 +52,7 @@ void Ball::Update(Ball *BallJ, UINT NumBalls, float dt)
 		Vec2SSE dist = RecipSqrRoot(deltaSqr.v);
 		Vec2SSE normal = delta * dist;
 		Vec2SSE invSqrDist = Recip(deltaSqr.v);
-		Vec2SSE force = Min(invSqrDist.v * vGrav.v, vMin.v);
+		Vec2SSE force = Min(invSqrDist.v * vDt.v, vMin.v);
 		Vec2SSE accel(normal * force);
 		acc += accel;
 		BallJ[j].acc -= accel;
@@ -75,7 +74,7 @@ void Ball::Draw(D3DGraphics &gfx)
 	{
 		return;
 	}
-	gfx.DrawSurfaceAlpha(px, py, diam, diam, pSurf);
+	gfx.DrawSurfaceAlphaUtil(px, py, diam, diam, pSurf);
 }
 
 Ball::~Ball()

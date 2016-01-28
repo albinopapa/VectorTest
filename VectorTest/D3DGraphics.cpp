@@ -1,5 +1,6 @@
 #include "D3DGraphics.h"
 #include "Bitmap.h"
+#include "SSEMath.h"
 
 D3DGraphics::D3DGraphics(std::shared_ptr<Window> &rWin)
 	: pBackBuffer(NULL),
@@ -28,6 +29,7 @@ D3DGraphics::~D3DGraphics()
 
 void D3DGraphics::PutPixel(int x, int y, D3DCOLOR C)
 {
+	
 	pSysBuffer[x + (y * win->Width())] = C;	
 }
 
@@ -64,6 +66,32 @@ void LoadFont(Font* font, const char* filename,
 	font->charHeight = charHeight;
 	font->charWidth = charWidth;
 	font->nCharsPerRow = nCharsPerRow;
+}
+
+void D3DGraphics::DrawLine(int X0, int Y0, int X1, int Y1, D3DCOLOR C)
+{
+	using namespace SSE_Utils::Float4_Utils;
+
+	Vec2 clamp(win->Width() - 1, win->Height() - 1);
+	Vec2 start(X0, Y0);
+	Vec2 end(X1, Y1);
+	start = Min(clamp.v, Max(ZeroPS, start.v));
+	end = Min(clamp.v, Max(ZeroPS, end.v));
+
+	Vec2 delta = end - start;
+
+	Vec2 vInvLen = delta.InverseLength();
+	Vec2 normal = delta * vInvLen;
+	Vec2 vLen = Recip(vInvLen.v) + HalfPS;
+	int len = int(vLen.X());
+
+	for (int i = 0; i < len; ++i)
+	{
+		Vec2 step(i);
+		Vector2 p = (start + (step * normal)).StoreInt();
+
+		PutPixel(p.b, p.g, C);
+	}
 }
 
 void D3DGraphics::DrawChar(char c, int xoff, int yoff, Font& font, D3DCOLOR color)
@@ -176,6 +204,31 @@ void D3DGraphics::DrawSurfaceAlpha(int X, int Y, int Width, int Height, const D3
 			// Pack pixels and store
 			SSE r(rLo.PackUnsignedSaturateWords(rHi));
 			StoreU_32(mBackPixel, r.A);
+		}
+	}
+}
+
+void D3DGraphics::DrawSurfaceAlphaUtil(int X, int Y, int Width, int Height, 
+	const D3DCOLOR *Surface)
+{
+	using namespace SSE_Utils::Dqword_Utils;
+
+	for (int y = 0; y < Height; ++y)
+	{
+		int surfaceRowOffset = y * Width;
+		int backBufferRowOffset = (y + Y) * win->Width();
+		for (int x = 0; x < Width; x += 4)
+		{
+			int surfaceIndex = x + surfaceRowOffset;
+			int backBufferIndex = (x + X) + backBufferRowOffset;
+			PDQWORD mSurfPixel = (PDQWORD)(&Surface[surfaceIndex]);
+			PDQWORD mBackPixel = (PDQWORD)(&(pSysBuffer.get()[backBufferIndex]));
+
+			DQWORD mSrcColor = LoadU_32(mSurfPixel);
+			DQWORD mDstColor = LoadU_32(mBackPixel);
+
+			DQWORD color = AlphaBlend(mSrcColor, mDstColor);
+			StoreU_32(mBackPixel, color);
 		}
 	}
 }

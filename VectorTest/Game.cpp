@@ -1,4 +1,4 @@
-#include "Game.h"
+﻿#include "Game.h"
 #include "Bitmap.h"
 #include <ctime>
 #include <sstream>
@@ -17,9 +17,11 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 {
 	srand((UINT)time(NULL));
 	LoadFont(&fixedSys, "Fonts\\Fixedsys16x28.bmp", 16, 28, 32);
+	skelly = Skeleton({ (float)win->Width() / 2, (float)win->Height() / 2, 0.0f, 0.0f });
+	
 
-	CreateSurface();
-	InitBalls();
+	//CreateSurface();
+	//InitBalls();
 
 }
 
@@ -29,9 +31,14 @@ Game::~Game()
 
 void Game::Go()
 {
-	gfx->BeginFrame();
 	UpdateTime();
-	UpdateFrameSSE();
+	//UpdateFrameSSE();
+	static float f = 0.016f;
+	f += 0.000016f;
+	f = fmodf(f, DirectX::XM_2PI);
+	float fm = f - DirectX::XM_PI;
+	skelly.Update(f);
+	gfx->BeginFrame();
 	ComposeFrame();
 	gfx->EndFrame();
 }
@@ -42,7 +49,7 @@ void Game::InitBalls()
 	ball.reset(new Ball[numBalls]);
 
 	std::default_random_engine rnd;
-	float initVel = 0.6f;
+
 	for (int i = 0; i < numBalls; ++i)
 	{
 		ball[i] = Ball(rnd, i, win, pSurf);
@@ -111,9 +118,11 @@ void Game::ComposeFrame()
 	std::string text = ss.str();
 	gfx->DrawString(text, 0, 0, fixedSys, D3DCOLOR_XRGB(0, 255, 0));
 
-	for (int i = 0; i < numBalls; ++i)
+	/*for (int i = 0; i < numBalls; ++i)
 	{
 		ball[i].Draw(*gfx.get());
-	}
+	}*/
+
+	skelly.Draw(*gfx.get());
 
 }

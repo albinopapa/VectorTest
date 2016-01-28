@@ -152,7 +152,10 @@
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Matrix4x4SSE.h" />
     <ClInclude Include="Mouse.h" />
+    <ClInclude Include="PlaneSSE.h" />
+    <ClInclude Include="QuaternionSSE.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="Skeleton.h" />
     <ClInclude Include="SSE.h" />
     <ClInclude Include="SSEMath.h" />
     <ClInclude Include="SSE_Utils.h" />
@@ -174,6 +177,9 @@
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="Matrix4x4SSE.cpp" />
     <ClCompile Include="Mouse.cpp" />
+    <ClCompile Include="PlaneSSE.cpp" />
+    <ClCompile Include="QuaternionSSE.cpp" />
+    <ClCompile Include="Skeleton.cpp" />
     <ClCompile Include="System.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Vec2f.cpp" />

@@ -1,5 +1,5 @@
 #include "Vec4SSE.h"
-
+#include "Matrix4x4SSE.h"
 
 using namespace SSE_Utils::Float4_Utils;
 
@@ -64,6 +64,10 @@ Vec4SSE Vec4SSE::operator*(const Vec4SSE &V)const
 {
 	return v * V.v;
 }
+Vec4SSE Vec4SSE::operator*(const Matrix4x4SSE &M)const
+{
+	return{ DirectX::XMVector4Transform(v, M) };
+}
 Vec4SSE Vec4SSE::operator/(const float S)const
 {
 	return v / S;
@@ -103,7 +107,7 @@ Vec4SSE Vec4SSE::Dot(const Vec4SSE &V)const
 
 	FLOAT4 t1 = Shuffle<Ayx | Bwz>(t0, t0);
 	t0 += t1;	
-	t1 = Shuffle<Ayx | Bwz>(t0, t0);
+	t1 = Shuffle<Azw | Bxy>(t0, t0);
 	t0 += t1;
 
 	return t0;
