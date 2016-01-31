@@ -13,7 +13,7 @@
 #include "Ball.h"
 // WIP
 #include "AlignedPtr.h"
-#include "Skeleton.h"
+#include "Slink.h"
 
 
 class Game
@@ -41,12 +41,12 @@ private:
 	float dt;
 	char fps[16]{};
 
-	int radius;
-	D3DCOLOR* pSurf;
+	Slink slink;
+	//int radius;
+	//D3DCOLOR* pSurf;
 
-	float g;
-	int numBalls;
-	std::unique_ptr<Ball[]> ball;
-	InstructionSet cpuid;
-	Skeleton skelly;
+	//float g;
+	//int numBalls;
+	//std::unique_ptr<Ball[]> ball;
+	//InstructionSet cpuid;
 };

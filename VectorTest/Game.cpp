@@ -17,7 +17,7 @@ Game::Game(std::shared_ptr<Window> &rWin, std::shared_ptr<KeyboardServer>& kServ
 {
 	srand((UINT)time(NULL));
 	LoadFont(&fixedSys, "Fonts\\Fixedsys16x28.bmp", 16, 28, 32);
-	skelly = Skeleton({ (float)win->Width() / 2, (float)win->Height() / 2, 0.0f, 0.0f });
+	skelly = std::move(Skeleton({ (float)win->Width() / 2, (float)win->Height() / 2, 0.0f, 0.0f }));
 	
 
 	//CreateSurface();
@@ -33,11 +33,24 @@ void Game::Go()
 {
 	UpdateTime();
 	//UpdateFrameSSE();
-	static float f = 0.016f;
-	f += 0.000016f;
-	f = fmodf(f, DirectX::XM_2PI);
-	float fm = f - DirectX::XM_PI;
-	skelly.Update(f);
+
+	KeyEvent e = kbd->ReadKey();
+	float av = 0.001f;
+
+	if (kbd->KeyIsPressed('A'))
+	{
+		
+	}
+	else if (kbd->KeyIsPressed('D'))
+	{
+	}
+	if (kbd->KeyIsPressed('W'))
+	{
+	}
+	else if (kbd->KeyIsPressed('S'))
+	{
+	}
+
 	gfx->BeginFrame();
 	ComposeFrame();
 	gfx->EndFrame();
@@ -123,6 +136,5 @@ void Game::ComposeFrame()
 		ball[i].Draw(*gfx.get());
 	}*/
 
-	skelly.Draw(*gfx.get());
 
 }

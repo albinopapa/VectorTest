@@ -144,6 +144,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AlignedPtr.h" />
+    <ClInclude Include="Animate.h" />
+    <ClInclude Include="Animation.h" />
     <ClInclude Include="Ball.h" />
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="CpuID.h" />
@@ -156,6 +158,7 @@
     <ClInclude Include="QuaternionSSE.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Skeleton.h" />
+    <ClInclude Include="Slink.h" />
     <ClInclude Include="SSE.h" />
     <ClInclude Include="SSEMath.h" />
     <ClInclude Include="SSE_Utils.h" />
@@ -167,8 +170,11 @@
     <ClInclude Include="Vec4SSE.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="Window.h" />
+    <ClInclude Include="Worm.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Animate.cpp" />
+    <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Ball.cpp" />
     <ClCompile Include="Bitmap.cpp" />
     <ClCompile Include="Cpuid.cpp" />
@@ -180,6 +186,7 @@
     <ClCompile Include="PlaneSSE.cpp" />
     <ClCompile Include="QuaternionSSE.cpp" />
     <ClCompile Include="Skeleton.cpp" />
+    <ClCompile Include="Slink.cpp" />
     <ClCompile Include="System.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Vec2f.cpp" />
@@ -188,6 +195,7 @@
     <ClCompile Include="Vec4SSE.cpp" />
     <ClCompile Include="Vector.cpp" />
     <ClCompile Include="Window.cpp" />
+    <ClCompile Include="Worm.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
