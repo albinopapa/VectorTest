@@ -1,6 +1,8 @@
 #pragma once
 #include "SSE_Utils.h"
 
+class Matrix4x4SSE;
+
 class Vec4SSE
 {
 public:
@@ -25,6 +27,7 @@ public:
 	Vec4SSE _vectorcall operator-(const Vec4SSE &V)const;
 	Vec4SSE _vectorcall operator*(const float S)const;
 	Vec4SSE _vectorcall operator*(const Vec4SSE &V)const;
+	Vec4SSE _vectorcall operator*(const Matrix4x4SSE &M)const;
 	Vec4SSE _vectorcall operator/(const float S)const;
 	Vec4SSE _vectorcall operator/(const Vec4SSE &V)const;
 

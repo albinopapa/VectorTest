@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\SSEUtils">
+      <UniqueIdentifier>{be9a2b65-1b71-4cec-aefe-24b7008ee6d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SSEUtils">
+      <UniqueIdentifier>{ab7b7f31-fd38-496f-8e98-78dc2beb2d60}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="System.h">
@@ -45,37 +51,58 @@
     <ClInclude Include="Vec2f.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SSEMath.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SSE.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SSE_Utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="AlignedPtr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Vec2SSE.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Vec3SSE.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CpuID.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Vec4SSE.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Ball.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Matrix4x4SSE.h">
+      <Filter>Header Files\SSEUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="PlaneSSE.h">
+      <Filter>Header Files\SSEUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="QuaternionSSE.h">
+      <Filter>Header Files\SSEUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="SSE.h">
+      <Filter>Header Files\SSEUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="SSE_Utils.h">
+      <Filter>Header Files\SSEUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="SSEMath.h">
+      <Filter>Header Files\SSEUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="Vec2SSE.h">
+      <Filter>Header Files\SSEUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="Vec3SSE.h">
+      <Filter>Header Files\SSEUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="Vec4SSE.h">
+      <Filter>Header Files\SSEUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="Skeleton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Animate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Slink.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Worm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -107,16 +134,7 @@
     <ClCompile Include="Vec2f.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Vec2sse.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Vector.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Vec3SSE.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Vec4SSE.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Cpuid.cpp">
@@ -126,6 +144,36 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Matrix4x4SSE.cpp">
+      <Filter>Source Files\SSEUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="PlaneSSE.cpp">
+      <Filter>Source Files\SSEUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="QuaternionSSE.cpp">
+      <Filter>Source Files\SSEUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="Vec2sse.cpp">
+      <Filter>Source Files\SSEUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="Vec3SSE.cpp">
+      <Filter>Source Files\SSEUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="Vec4SSE.cpp">
+      <Filter>Source Files\SSEUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="Skeleton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Animate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Animation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Slink.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Worm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

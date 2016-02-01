@@ -24,6 +24,16 @@ Matrix4x4SSE::Matrix4x4SSE(const Vec4SSE &R0, const Vec4SSE &R1, const Vec4SSE &
 	r[3] = R3.v;
 }
 
+Matrix4x4SSE Matrix4x4SSE::operator*(const Matrix4x4SSE &M)
+{
+	return XMMatrixMultiply(*this, M);
+}
+
+Vec4SSE Matrix4x4SSE::operator*(const Vec4SSE &V)
+{
+	return{ XMVector4Transform(V.v, *this) };
+}
+
 bool Matrix4x4SSE::Decompose(Vec4SSE &Scale, Vec4SSE &RotationQuaternion,
 	Vec4SSE &Translation)
 {
@@ -80,11 +90,11 @@ Matrix4x4SSE &Matrix4x4SSE::Identity()
 
 // Builders
 Matrix4x4SSE &Matrix4x4SSE::AffineTransformation(const Vec4SSE &Scaling,
-	const Vec4SSE &RotationOrigin, const Vec4SSE &RotationQuaternion,
+	const Vec4SSE &RotationOrigin, const QuaternionSSE &RotationQuaternion,
 	const Vec4SSE &Translation)
 {
 	*this = XMMatrixAffineTransformation(Scaling.v, RotationOrigin.v, 
-		RotationQuaternion.v, Translation.v);
+		RotationQuaternion.angle.v, Translation.v);
 	return (*this);
 }
 
@@ -234,9 +244,9 @@ Matrix4x4SSE &Matrix4x4SSE::RotateNormalAxis(const Vec4SSE &Axis, const float An
 	return *this;
 }
 
-Matrix4x4SSE &Matrix4x4SSE::RotateQuaternion(const Vec4SSE &Quaternion)
+Matrix4x4SSE &Matrix4x4SSE::RotateQuaternion(const QuaternionSSE &Quaternion)
 {
-	*this = XMMatrixRotationQuaternion(Quaternion.v);
+	*this = XMMatrixRotationQuaternion(Quaternion.angle.v);
 	return *this;
 }
 
@@ -260,12 +270,12 @@ Matrix4x4SSE &Matrix4x4SSE::Shadow(const Vec4SSE &ShadowPlane,
 }
 
 Matrix4x4SSE &Matrix4x4SSE::Transformation(const Vec4SSE &ScalingOrigin,
-	const Vec4SSE &ScalingOrientationQuaternion, const Vec4SSE &Scaling,
-	const Vec4SSE &RotationOrigin, const Vec4SSE &RotationQuaternion,
+	const QuaternionSSE &ScalingOrientationQuaternion, const Vec4SSE &Scaling,
+	const Vec4SSE &RotationOrigin, const QuaternionSSE &RotationQuaternion,
 	const Vec4SSE &Translation)
 {
-	*this = XMMatrixTransformation(ScalingOrigin.v, ScalingOrientationQuaternion.v,
-		Scaling.v, RotationOrigin.v, RotationQuaternion.v, Translation.v);
+	*this = XMMatrixTransformation(ScalingOrigin.v, ScalingOrientationQuaternion.angle.v,
+		Scaling.v, RotationOrigin.v, RotationQuaternion.angle.v, Translation.v);
 	return *this;
 }
 

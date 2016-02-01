@@ -191,6 +191,7 @@ enum Shuffle_Words_or_DWords
 
 #define Zero128 _mm_setzero_si128()
 #define Replicate32 _mm_set1_epi32
+#define Replicate16 _mm_set1_epi16
 
 // Roll DWORDs 
 #define RollR32_1(A) (_mm_shuffle_epi32(A, BARG))
@@ -581,6 +582,60 @@ namespace SSE_Utils
 			return Shuffle<YZWX>(V);
 		}
 #pragma endregion
+	}
+	namespace Dqword_Utils
+	{
+		inline DQWORD ExtractAlpha(const DQWORD &Color)
+		{
+			DQWORD alpha = ShuffleHi_Word(Color, AAAA);
+			alpha = ShuffleLo_Word(alpha, AAAA);
+			return alpha;
+		}
+		inline void UnpackColor(DQWORD &HiColor, DQWORD &LoColor, const DQWORD SrcColor)
+		{
+			HiColor = _mm_unpackhi_epi8(SrcColor, Zero128);
+			LoColor = _mm_unpacklo_epi8(SrcColor, Zero128);
+		}
+		inline DQWORD AlphaBlend(const DQWORD &Color0, const DQWORD &Color1)
+		{
+			DQWORD alphaMask = Replicate16(255);
+
+			DQWORD hiColorSrc, loColorSrc, hiColorDst, loColorDst;
+			UnpackColor(hiColorSrc, loColorSrc, Color0);
+			UnpackColor(hiColorDst, loColorDst, Color1);
+
+			DQWORD srcAlphaHi = ExtractAlpha(hiColorSrc);
+			DQWORD srcAlphaLo = ExtractAlpha(loColorSrc);
+			DQWORD dstAlphaHi = _mm_sub_epi16(alphaMask, srcAlphaHi);
+			DQWORD dstAlphaLo = _mm_sub_epi16(alphaMask, srcAlphaLo);
+
+			
+			DQWORD hiResultSrc = _mm_mullo_epi16(srcAlphaHi, hiColorSrc);
+			DQWORD loResultSrc = _mm_mullo_epi16(srcAlphaLo, loColorSrc);
+			DQWORD hiResultDst = _mm_mullo_epi16(dstAlphaHi, hiColorDst);
+			DQWORD loResultDst = _mm_mullo_epi16(dstAlphaLo, loColorDst);
+			
+			DQWORD hiResult = _mm_add_epi16(hiResultSrc, hiResultDst);
+			DQWORD loResult = _mm_add_epi16(loResultSrc, loResultDst);
+
+			hiResult = _mm_srli_epi16(hiResult, 8);
+			loResult = _mm_srli_epi16(loResult, 8);
+
+			DQWORD result = _mm_packus_epi16(loResult, hiResult);
+
+			return result;
+		}
+		inline DQWORD ColorKeyBlend(const DQWORD &Color0, const DQWORD &Color1, unsigned int ColorKey)
+		{
+			DQWORD key = Replicate16(ColorKey);
+
+			DQWORD mask = _mm_cmpeq_epi32(Color0, key);
+			DQWORD srcColor = _mm_and_si128(mask, Color0);
+			DQWORD dstColor = _mm_andnot_si128(mask, Color1);
+			DQWORD color = _mm_or_si128(srcColor, dstColor);
+
+			return color;
+		}
 	}
 }
 
