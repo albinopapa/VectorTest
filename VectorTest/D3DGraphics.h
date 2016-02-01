@@ -43,7 +43,7 @@ public:
 	void DrawString(const std::string &Text, int X, int Y, Font &font, D3DCOLOR Color);
 	void DrawSurface(int x, int y, int width, int height, D3DCOLOR key, const D3DCOLOR* surf);
 	void DrawSurfaceAlpha(int X, int Y, int Width, int Height, const D3DCOLOR * Surface);
-
+	void DrawSurfaceAlphaShift(int X, int Y, int Width, int Height, const D3DCOLOR * Surface);
 
 private:
 	Microsoft::WRL::ComPtr<IDirect3D9>			pDirect3D;

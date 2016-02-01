@@ -118,18 +118,14 @@ void D3DGraphics::DrawSurface(int xoff, int yoff, int width, int height, D3DCOLO
 
 void D3DGraphics::DrawSurfaceAlpha(int X, int Y, int Width, int Height, const D3DCOLOR * Surface)
 {
-	int xStart = max(-X, 0);
-	int xEnd = min(Width, win->Width() - X - 1);
-	int yStart = max(-Y, 0);
-	int yEnd = min(Height, win->Height() - Y - 1);
-
 	SSE alphaMask(_mm_set1_epi16(255));
-
-	for (int y = yStart; y < yEnd; ++y)
+	UINT winWidth = win->Width();
+	UINT winHeight = win->Height();
+	for (int y = 0; y < Height; ++y)
 	{
 		int surfaceRowOffset = y * Width;
-		int backBufferRowOffset = (y + Y) * win->Width();
-		for (int x = xStart; x < xEnd; x += 4)
+		int backBufferRowOffset = (y + Y) * winWidth;
+		for (int x = 0; x < Width; x += 4)
 		{
 			int surfaceIndex = x + surfaceRowOffset;
 			int backBufferIndex = (x + X) + backBufferRowOffset;
@@ -176,6 +172,62 @@ void D3DGraphics::DrawSurfaceAlpha(int X, int Y, int Width, int Height, const D3
 			// Pack pixels and store
 			SSE r(rLo.PackUnsignedSaturateWords(rHi));
 			StoreU_32(mBackPixel, r.A);
+		}
+	}
+}
+
+void D3DGraphics::DrawSurfaceAlphaShift(int X, int Y, int Width, int Height, const D3DCOLOR * Surface)
+{
+	SSE aMask(_mm_set1_epi32(0xFF000000));
+	SSE rMask(_mm_set1_epi32(0x00FF0000));
+	SSE gMask(_mm_set1_epi32(0x0000FF00));
+	SSE bMask(_mm_set1_epi32(0x000000FF));
+
+	UINT winWidth = win->Width();
+	UINT winHeight = win->Height();
+
+	for (int y = 0; y < Height; ++y)
+	{
+		int surfaceRowOffset = y * Width;
+		int backBufferRowOffset = (y + Y) * winWidth;
+		for (int x = 0; x < Width; x += 4)
+		{
+			int surfaceIndex = x + surfaceRowOffset;
+			int backBufferIndex = (x + X) + backBufferRowOffset;
+			PDQWORD mSurfPixel = (PDQWORD)(&Surface[surfaceIndex]);
+			PDQWORD mBackPixel = (PDQWORD)(&(pSysBuffer.get()[backBufferIndex]));
+
+			SSE mSrcColor = LoadU_32(mSurfPixel);
+			SSE mDstColor = LoadU_32(mBackPixel);
+
+			// Extract all channels by masking and shifting
+			SSE sA = (mSrcColor & aMask).ShiftRightIDwords(24);
+			SSE sR = (mSrcColor & rMask).ShiftRightIDwords(16);
+			SSE sG = (mSrcColor & gMask).ShiftRightIDwords(8);
+			SSE sB = (mSrcColor & bMask);
+
+			SSE dA = aMask.SubtractDwords(sA);
+			SSE dR = (mDstColor & rMask).ShiftRightIDwords(16);
+			SSE dG = (mDstColor & gMask).ShiftRightIDwords(8);
+			SSE dB = (mDstColor & bMask);
+
+			// Multiply src with src alpha and dst with dst alpha
+			SSE rsR = sR.MultiplyDwords(sA);
+			SSE rsG = sG.MultiplyDwords(sA);
+			SSE rsB = sB.MultiplyDwords(sA);
+			SSE rdR = dR.MultiplyDwords(dA);
+			SSE rdG = dG.MultiplyDwords(dA);
+			SSE rdB = dB.MultiplyDwords(dA);
+
+			// then add together
+			SSE rR = rsR.AddDwords(rdR);
+			SSE rG = rsG.AddDwords(rdG);
+			SSE rB = rsB.AddDwords(rdB);
+
+			// Or the result together while shifting into position
+			SSE rA = aMask | rR.ShiftLeftIDwords(16) | rG.ShiftLeftIDwords(8) | rB;
+						
+			StoreU_32(mBackPixel, rA.A);
 		}
 	}
 }

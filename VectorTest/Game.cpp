@@ -38,7 +38,7 @@ void Game::Go()
 
 void Game::InitBalls()
 {
-	numBalls = 2000;
+	numBalls = 3000;
 	ball.reset(new Ball[numBalls]);
 
 	std::default_random_engine rnd;

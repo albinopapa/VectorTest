@@ -75,7 +75,7 @@ void Ball::Draw(D3DGraphics &gfx)
 	{
 		return;
 	}
-	gfx.DrawSurfaceAlpha(px, py, diam, diam, pSurf);
+	gfx.DrawSurfaceAlphaShift(px, py, diam, diam, pSurf);
 }
 
 Ball::~Ball()

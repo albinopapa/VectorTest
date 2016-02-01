@@ -19,6 +19,15 @@ public:
 	{
 
 	}
+	SSE(int A, int R, int G, int B)
+		:
+		A(_mm_set_epi32(B, G, R, A))
+	{}
+	SSE(int LoA, int LoR, int LoG, int LoB,
+		int HiA, int HiR, int HiG, int HiB)
+		:
+		A(_mm_set_epi16(LoB, LoG, LoR, LoA, HiB, HiG, HiR, HiA))
+	{}
 	///// operations on the bytes of DQWORD
 
 	// Arithmetic
